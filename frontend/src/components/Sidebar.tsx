@@ -7,17 +7,18 @@ export default function Sidebar() {
   const role = localStorage.getItem('role') || 'doctor';
 
   const menuItems = [
-    { path: '/dashboard', icon: Home, label: 'Overview', roles: ['doctor', 'receptionist'] },
+    { path: '/dashboard', icon: Home, label: 'Overview', roles: ['doctor', 'receptionist', 'staff'] },
     { path: '/admin-dashboard', icon: Shield, label: 'Admin Panel', roles: ['admin'] },
-    { path: '/inbox', icon: MessageSquare, label: 'Inbox', roles: ['doctor', 'receptionist'] },
-    { path: '/appointments', icon: Calendar, label: 'Schedule', roles: ['doctor', 'receptionist'] },
-    { path: '/patients', icon: Users, label: 'Patients', roles: ['doctor', 'receptionist'] },
-    { path: '/doctors', icon: Stethoscope, label: 'Doctors', roles: ['doctor', 'receptionist'] },
-    { path: '/bulk-upload', icon: UploadCloud, label: 'Add Data', roles: ['doctor', 'receptionist'] },
+    { path: '/inbox', icon: MessageSquare, label: 'Inbox', roles: ['doctor', 'receptionist', 'staff'] },
+    { path: '/appointments', icon: Calendar, label: 'Schedule', roles: ['doctor', 'receptionist', 'staff'] },
+    { path: '/patients', icon: Users, label: 'Patients', roles: ['doctor', 'receptionist', 'staff'] },
+    { path: '/doctors', icon: Stethoscope, label: 'Doctors', roles: ['admin', 'doctor', 'receptionist', 'staff'] },
+    { path: '/bulk', icon: UploadCloud, label: 'Bulk Upload', roles: ['doctor', 'receptionist', 'staff'] },
     { path: '/add-doctor', icon: User, label: 'Add Doctor', roles: ['admin'] },
     { path: '/add-staff', icon: Users, label: 'Add Staff', roles: ['admin', 'doctor'] },
-    { path: '/settings', icon: Settings, label: 'Settings', roles: ['admin', 'doctor', 'receptionist'] },
+    { path: '/settings', icon: Settings, label: 'Settings', roles: ['admin', 'doctor', 'receptionist', 'staff'] },
   ];
+
 
   return (
     <div className="w-72 h-screen flex flex-col p-6 z-20 relative bg-black">

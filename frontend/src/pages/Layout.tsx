@@ -1,8 +1,16 @@
-import { Outlet } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { Search, Bell, Sun, Command } from 'lucide-react';
 
 export default function Layout() {
+  const token = localStorage.getItem('token');
+  const role = localStorage.getItem('role');
+  const name = localStorage.getItem('name') || (role === 'admin' ? 'System Admin' : 'Authorized Provider');
+
+  if (!token) {
+    return <Navigate to="/" replace />;
+  }
+
   return (
     <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
@@ -38,15 +46,16 @@ export default function Layout() {
 
             <div className="flex items-center gap-5 pl-8 border-l border-zinc-100">
                <div className="text-right">
-                  <p className="text-sm font-black text-black leading-none">Dr. Sarah Connor</p>
-                  <p className="text-[9px] font-black text-violet-600 uppercase tracking-widest mt-1.5">Authorized Provider</p>
+                  <p className="text-sm font-black text-black leading-none">{name}</p>
+                  <p className="text-[9px] font-black text-violet-600 uppercase tracking-widest mt-1.5">{role === 'admin' ? 'Root Authority' : 'Authorized Provider'}</p>
                </div>
                <div className="w-12 h-12 rounded-xl border-2 border-black p-0.5 overflow-hidden">
-                  <img src="https://i.pravatar.cc/150?u=sarah" alt="Profile" className="w-full h-full object-cover rounded-lg" />
+                  <img src={`https://i.pravatar.cc/150?u=${role}`} alt="Profile" className="w-full h-full object-cover rounded-lg" />
                </div>
             </div>
           </div>
         </header>
+
 
         <main className="flex-1 overflow-y-auto px-12 py-10 scrollbar-thin bg-white">
           <Outlet />

@@ -27,6 +27,7 @@ export default function AdminLogin() {
       
       localStorage.setItem('token', res.data.access_token);
       localStorage.setItem('role', res.data.role);
+      localStorage.setItem('name', res.data.name);
       
       navigate('/admin-dashboard');
     } catch (err: any) {

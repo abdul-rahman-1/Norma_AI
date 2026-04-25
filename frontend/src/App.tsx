@@ -28,7 +28,7 @@ function App() {
           <Route path="/appointments" element={<Appointments />} />
           <Route path="/patients" element={<Patients />} />
           <Route path="/doctors" element={<Doctors />} />
-          <Route path="/bulk-upload" element={<BulkUpload />} />
+          <Route path="/bulk" element={<BulkUpload />} />
           <Route path="/add-doctor" element={<AddDoctor />} />
           <Route path="/add-staff" element={<AddStaff />} />
           <Route path="/inbox" element={<Inbox />} />

@@ -51,11 +51,25 @@ async def login(form_data: OAuth2PasswordRequestForm = Depends()):
             headers={"WWW-Authenticate": "Bearer"},
         )
     
+    # Restrict to doctor and staff (receptionist) roles
+    allowed_roles = ["doctor", "receptionist", "staff"]
+    if user.get("role") not in allowed_roles:
+        raise HTTPException(
+            status_code=status.HTTP_401_UNAUTHORIZED,
+            detail="Unauthorized role for this login terminal",
+            headers={"WWW-Authenticate": "Bearer"},
+        )
+    
     identity = user.get("username") or user.get("phone_number")
     access_token = create_access_token(
         data={"sub": identity, "role": user["role"]}
     )
-    return {"access_token": access_token, "token_type": "bearer", "role": user["role"]}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer", 
+        "role": user["role"],
+        "name": user.get("name", "User")
+    }
 
 @router.post("/admin-login")
 async def admin_login(form_data: OAuth2PasswordRequestForm = Depends()):
@@ -75,7 +89,12 @@ async def admin_login(form_data: OAuth2PasswordRequestForm = Depends()):
     access_token = create_access_token(
         data={"sub": admin["username"], "role": "admin"}
     )
-    return {"access_token": access_token, "token_type": "bearer", "role": "admin"}
+    return {
+        "access_token": access_token, 
+        "token_type": "bearer", 
+        "role": "admin",
+        "name": admin.get("name", "System Admin")
+    }
 
 def check_role(allowed_roles: List[str]):
     async def role_checker(current_user: dict = Depends(get_current_user)):

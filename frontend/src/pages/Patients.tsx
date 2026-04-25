@@ -1,4 +1,5 @@
 import { useState, useEffect } from 'react';
+import { Navigate } from 'react-router-dom';
 import axios from 'axios';
 import { 
   Users, Search, Plus, MoreVertical, Edit2, Trash2, Loader2, X,
@@ -14,6 +15,12 @@ export default function Patients() {
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [editingPatient, setEditingPatient] = useState<any>(null);
+  
+  const role = localStorage.getItem('role');
+
+  if (role === 'admin') {
+    return <Navigate to="/admin-dashboard" replace />;
+  }
   
   const initialForm = {
     full_name: '',
