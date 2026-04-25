@@ -96,9 +96,9 @@ class AIService:
             cancel_appointment, 
             get_patient_appointments
         ]
-        # Switching to 1.5-flash for better stability/availability
+        # Switching to 2.5-flash as per user instructions
         self.model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',
+            model_name='gemini-2.5-flash',
             tools=self.tools
         )
         self.system_instruction = """
