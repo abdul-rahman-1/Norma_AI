@@ -10,10 +10,12 @@ router = APIRouter()
 
 async def process_and_audit(phone: str, message: str):
     """Handles AI logic, replies to patient, and logs the entire exchange."""
+    print(f"\n--- NEW INBOUND MESSAGE ---")
+    print(f"SENDER: {phone}")
+    print(f"MESSAGE: {message}")
     db = get_db()
     try:
         # 1. Log Inbound Message
-        logger.info(f"WHATSAPP INBOUND: From={phone} Body='{message}'")
         if db is not None:
             await db.messages.insert_one({
                 "phone": phone,
@@ -21,15 +23,19 @@ async def process_and_audit(phone: str, message: str):
                 "text": message,
                 "timestamp": datetime.utcnow()
             })
+        else:
+            print("CRITICAL: MongoDB connection is NULL in process_and_audit")
 
         # 2. Process with AI
+        print(f"AI_SERVICE: Calling process_message for {phone}...")
         response_text = await ai_service.process_message(phone, message)
+        print(f"AI_SERVICE: Response generated: '{response_text[:50]}...'")
         
         # 3. Dispatch WhatsApp Reply
+        print(f"TWILIO: Dispatching message to {phone}...")
         await whatsapp_service.send_custom_message(phone, response_text)
 
         # 4. Log Outbound Response
-        logger.info(f"WHATSAPP OUTBOUND: To={phone} Body='{response_text}'")
         if db is not None:
             await db.messages.insert_one({
                 "phone": phone,
@@ -37,10 +43,11 @@ async def process_and_audit(phone: str, message: str):
                 "text": response_text,
                 "timestamp": datetime.utcnow()
             })
+        print(f"--- MESSAGE CYCLE COMPLETE ---\n")
 
     except Exception as e:
-        logger.error(f"WEBHOOK CRITICAL ERROR: {e}")
-        logger.error(traceback.format_exc())
+        print(f"WH_PROCESSOR_ERROR: {str(e)}")
+        print(traceback.format_exc())
 
 @router.post("/webhook")
 async def whatsapp_webhook(
@@ -51,6 +58,7 @@ async def whatsapp_webhook(
     """Gateway entry point. Responds to Twilio instantly and audits in background."""
     try:
         sender_phone = From.replace('whatsapp:', '').strip()
+        print(f"GATEWAY: Received webhook from {sender_phone}")
         
         # Dispatch to background audit stream
         background_tasks.add_task(process_and_audit, sender_phone, Body)
@@ -59,5 +67,5 @@ async def whatsapp_webhook(
         return Response(content="OK", media_type="text/plain", status_code=200)
         
     except Exception as e:
-        logger.error(f"GATEWAY WEBHOOK ERROR: {e}")
+        print(f"GATEWAY_WEBHOOK_EXCEPTION: {e}")
         return Response(content="OK", status_code=200)

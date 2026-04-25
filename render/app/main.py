@@ -2,6 +2,7 @@ from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.mongodb import connect_to_mongo, close_mongo_connection
 from app.api import webhook
+from app.logger import logger
 
 app = FastAPI(title="Norma AI Standalone Bot")
 

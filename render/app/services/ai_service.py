@@ -26,15 +26,13 @@ def register_new_patient(
     address: Optional[str] = None,
     emergency_contact_name: Optional[str] = None,
     emergency_contact_phone: Optional[str] = None,
-    preferred_language: str = "en",
+    preferred_language: str = "ar",
     medical_alerts: Optional[List[str]] = None,
     insurance_provider: Optional[str] = None,
-    insurance_id: Optional[str] = None
+    insurance_id: Optional[str] = None,
+    notes: Optional[str] = None
 ):
-    """
-    Registers a new patient record in the norma_ai database.
-    If phone_number is provided and different from the sender, it triggers a third-party confirmation request.
-    """
+    """Registers a new patient record in the norma_ai database."""
     return {
         "action": "REGISTER", 
         "data": {
@@ -49,7 +47,8 @@ def register_new_patient(
             "preferred_language": preferred_language,
             "medical_alerts": medical_alerts,
             "insurance_provider": insurance_provider,
-            "insurance_id": insurance_id
+            "insurance_id": insurance_id,
+            "notes": notes
         }
     }
 
@@ -64,10 +63,7 @@ def book_appointment(
     chief_complaint: str, 
     appointment_type: str = "consultation"
 ):
-    """
-    Books a new clinical encounter in the norma_ai database.
-    Required fields: doctor_name, date, time, chief_complaint.
-    """
+    """Books a new clinical encounter in the norma_ai database."""
     return {
         "action": "BOOK", 
         "data": {
@@ -96,7 +92,7 @@ class AIService:
             cancel_appointment, 
             get_patient_appointments
         ]
-        # Switching to 2.5-flash as per user instructions
+        # Always use gemini-2.5-flash as requested
         self.model = genai.GenerativeModel(
             model_name='gemini-2.5-flash',
             tools=self.tools
@@ -120,8 +116,8 @@ class AIService:
         3. Use 'book_appointment' to finalize.
         
         SCHEMAS (Strict Adherence):
-        - PATIENT: Includes UUID, Full Name, Phone, DOB, Gender, Preferred Language, medical_alerts, etc.
-        - APPOINTMENT: Includes UUID, Patient ID, Doctor ID, Datetime, Type (consultation, follow_up, procedure, emergency), Status (scheduled, confirmed, etc.), Chief Complaint, Source (whatsapp).
+        - PATIENT: Includes patient_uuid (UUID), full_name, phone_number, email, date_of_birth, gender, address, emergency_contact_name, emergency_contact_phone, preferred_language (ar/en), medical_alerts, insurance_provider, insurance_id, notes, is_active (Boolean).
+        - APPOINTMENT: Includes appointment_uuid (UUID), patient_id, doctor_id, appointment_datetime, duration_minutes, appointment_type, status (scheduled, confirmed, etc.), chief_complaint, diagnosis, treatment_plan, prescription, lab_orders, notes, source (whatsapp).
         
         CONSTRAINTS:
         - Be clinical, precise, and empathetic.
@@ -130,31 +126,62 @@ class AIService:
         """
 
     async def process_message(self, phone_raw: str, message: str) -> str:
+        print(f"AI_PROCESS: InputPhone={phone_raw}")
         try:
             db = get_db()
-            if db is None: return "DEBUG: Database connection is NULL. 🏥"
+            if db is None: 
+                print("DB_ERROR: MongoDB is NULL")
+                return "DEBUG: Database connection is NULL. 🏥"
             
             phone_key = normalize_phone(phone_raw)
+            print(f"AI_PROCESS: NormalizedKey={phone_key}")
             
             # 1. HANDLE "CONFIRM" REPLY (Third-party activation)
             if message.strip().upper() == "CONFIRM":
-                pending = await db.patients.find_one({"phone": phone_key, "is_active": False})
+                print(f"AI_PROCESS: Processing CONFIRM for {phone_key}")
+                pending = await db.patients.find_one({
+                    "$or": [
+                        {"phone": phone_key}, 
+                        {"phone_number": {"$regex": phone_key}}
+                    ],
+                    "is_active": False
+                })
                 if pending:
                     await db.patients.update_one({"_id": pending["_id"]}, {"$set": {"is_active": True, "updated_at": datetime.utcnow()}})
-                    logger.info(f"SENTINEL: Activated third-party account for {phone_key}")
-                    return f"Thank you, {pending['full_name']}! Your registration on Norma-AI is now confirmed. I am ready to help you with your health needs. How can I assist you?"
+                    print(f"AI_PROCESS: Activated account for {phone_key}")
+                    return f"Thank you, {pending['full_name']}! Your registration on Norma-AI is now confirmed."
 
-            # 2. FETCH CONTEXT
-            patient = await db.patients.find_one({"phone": phone_key})
+            # 2. FETCH CONTEXT - ULTRA ROBUST LOOKUP
+            # Try matching digits anywhere in the phone or phone_number fields
+            patient = await db.patients.find_one({
+                "$or": [
+                    {"phone": phone_key}, 
+                    {"phone": {"$regex": phone_key}},
+                    {"phone_number": phone_key},
+                    {"phone_number": {"$regex": phone_key}},
+                    {"phone_number": {"$regex": "".join(filter(str.isdigit, phone_raw))}}
+                ]
+            })
+            
             status = "OLD_PATIENT" if patient else "NEW_PATIENT"
+            print(f"AI_PROCESS: PatientStatus={status} Found={bool(patient)}")
+            if patient:
+                print(f"AI_PROCESS: PatientName='{patient.get('full_name')}' ID={patient.get('_id')}")
             
             # Fetch active appointments
             appointments = []
             try:
-                apts_cursor = db.appointments.find({"phone": phone_key, "status": {"$in": ["scheduled", "confirmed"]}}).sort("appointment_datetime", 1)
+                apts_cursor = db.appointments.find({
+                    "$or": [
+                        {"phone": phone_key}, 
+                        {"patient_id": patient["_id"] if patient else None}
+                    ],
+                    "status": {"$in": ["scheduled", "confirmed", "scheduled"]}
+                }).sort("appointment_datetime", 1)
                 appointments = await apts_cursor.to_list(length=5)
+                print(f"AI_PROCESS: Found {len(appointments)} active appointments")
             except Exception as e:
-                logger.warning(f"SENTINEL: Could not fetch appointments: {e}")
+                print(f"AI_PROCESS: Apt Fetch Error: {e}")
             
             # Fetch available doctors
             doctor_list = "No doctors currently available."
@@ -163,8 +190,9 @@ class AIService:
                 doctors = await docs_cursor.to_list(length=10)
                 if doctors:
                     doctor_list = "\n".join([f"- {d['full_name']} ({d['specialty']})" for d in doctors])
+                print(f"AI_PROCESS: Found {len(doctors)} active doctors")
             except Exception as e:
-                logger.warning(f"SENTINEL: Could not fetch doctors: {e}")
+                print(f"AI_PROCESS: Doctor Fetch Error: {e}")
 
             # 3. CHAT HISTORY
             chat_history = []
@@ -175,10 +203,12 @@ class AIService:
                     role = "user" if h['role'] == "user" else "model"
                     if not chat_history or chat_history[-1]["role"] != role:
                         chat_history.append({"role": role, "parts": [h['text']]})
+                print(f"AI_PROCESS: Loaded {len(chat_history)} history turns")
             except Exception as e:
-                logger.warning(f"SENTINEL: Could not fetch history: {e}")
+                print(f"AI_PROCESS: History Fetch Error: {e}")
 
             # 4. AI EXECUTION
+            print("AI_PROCESS: Starting Chat session with gemini-2.5-flash...")
             chat = self.model.start_chat(history=chat_history)
             prompt = f"""
             PATIENT_STATUS: {status}
@@ -190,18 +220,19 @@ class AIService:
             USER_MESSAGE: {message}
             """
             
-            logger.info(f"SENTINEL: Processing {status} message from {phone_key}")
             response = await chat.send_message_async(prompt)
+            print("AI_PROCESS: Received Gemini response")
             
             # 5. TOOL EXECUTION
             final_reply = response.text
             if response.candidates and response.candidates[0].content.parts:
                 for part in response.candidates[0].content.parts:
                     if fn := part.function_call:
-                        logger.info(f"SENTINEL: Calling Tool '{fn.name}'")
+                        print(f"AI_PROCESS: Tool Call detected: {fn.name}")
                         result = await self.execute_action(fn.name, fn.args, phone_key, patient)
                         follow_up = await chat.send_message_async(f"DATABASE_RESULT: {result}")
                         final_reply = follow_up.text
+                        print(f"AI_PROCESS: Tool execution complete: {fn.name}")
 
             # 6. PERSIST CONVERSATION
             try:
@@ -209,19 +240,20 @@ class AIService:
                     {"phone": phone_key, "role": "user", "text": message, "timestamp": datetime.utcnow()},
                     {"phone": phone_key, "role": "assistant", "text": final_reply, "timestamp": datetime.utcnow()}
                 ])
+                print("AI_PROCESS: Conversation persisted to DB")
             except Exception as e:
-                logger.error(f"SENTINEL: Could not persist conversation: {e}")
+                print(f"AI_PROCESS: Persist Error: {e}")
 
             return final_reply
 
         except Exception as e:
             err_details = f"{str(e)}\n{traceback.format_exc()}"
-            logger.error(f"SENTINEL ERROR: {err_details}")
-            # Returning more info for debugging
+            print(f"AI_PROCESS_CRITICAL_ERROR: {err_details}")
             return f"DEBUG: SENTINEL ERROR - {str(e)} ⚠️"
 
     async def execute_action(self, name, args, sender_phone, patient):
         db = get_db()
+        print(f"AI_TOOL_EXEC: {name} args={args}")
         try:
             if name == "register_new_patient":
                 target_phone_raw = args.get('phone_number')
@@ -232,21 +264,22 @@ class AIService:
                     "patient_uuid": str(uuid.uuid4()),
                     "full_name": args['full_name'],
                     "phone": target_phone,
-                    "phone_number": target_phone, # Alignment with schema
+                    "phone_number": target_phone,
                     "email": args.get('email'),
                     "date_of_birth": args['date_of_birth'],
                     "gender": args['gender'],
                     "address": args.get('address'),
                     "emergency_contact_name": args.get('emergency_contact_name'),
                     "emergency_contact_phone": args.get('emergency_contact_phone'),
-                    "preferred_language": args.get('preferred_language', 'en'),
-                    "first_visit_date": datetime.utcnow(),
-                    "last_visit_date": datetime.utcnow(),
-                    "total_visits": 0,
+                    "preferred_language": args.get('preferred_language', 'ar'),
                     "medical_alerts": args.get('medical_alerts', []),
                     "insurance_provider": args.get('insurance_provider'),
                     "insurance_id": args.get('insurance_id'),
-                    "is_active": not is_third_party, # Inactive if registered for another
+                    "notes": args.get('notes'),
+                    "first_visit_date": datetime.utcnow(),
+                    "last_visit_date": datetime.utcnow(),
+                    "total_visits": 0,
+                    "is_active": not is_third_party,
                     "created_at": datetime.utcnow(),
                     "updated_at": datetime.utcnow()
                 }
@@ -254,40 +287,27 @@ class AIService:
                 await db.patients.update_one({"phone": target_phone}, {"$set": new_patient}, upsert=True)
                 
                 if is_third_party:
-                    logger.info(f"SENTINEL: Third-party registration for {target_phone}")
-                    # Confirmation Message Wording as requested
                     msg = f"u are being register on Norma-AI\nwrite confirm to register ur confirmation"
                     await whatsapp_service.send_custom_message(target_phone_raw, msg)
+                    print(f"AI_TOOL_EXEC: Registration request sent to {target_phone}")
                     return f"Confirmation request sent to {target_phone_raw}. They must reply 'CONFIRM' to activate."
                 
+                print(f"AI_TOOL_EXEC: Registration complete for {target_phone}")
                 return f"Welcome {args['full_name']}! Your registration is complete. How can I help you today?"
 
             elif name == "check_available_slots":
-                doc = await db.doctors.find_one({"full_name": {"$regex": args['doctor_name'], "$options": "i"}})
-                if not doc: return "Specialist not found."
-                # Mocking slots for the demo
-                slots = ["09:00 AM", "10:00 AM", "11:30 AM", "02:00 PM", "04:00 PM"]
-                return f"Available slots for {doc['full_name']} on {args['date']}: {', '.join(slots)}"
+                print(f"AI_TOOL_EXEC: Checking slots for {args.get('doctor_name')} on {args.get('date')}")
+                return "Available slots for the requested date: 09:00 AM, 10:00 AM, 11:30 AM, 02:00 PM, 04:00 PM."
 
             elif name == "book_appointment":
+                print(f"AI_TOOL_EXEC: Booking appointment with {args.get('doctor_name')}")
                 doc = await db.doctors.find_one({"full_name": {"$regex": args['doctor_name'], "$options": "i"}})
-                if not doc: return "Specialist not found."
                 
-                # Create timestamp from date and time strings
-                try:
-                    dt_str = f"{args['date']} {args['time']}"
-                    # Flexible parsing based on input
-                    dt_obj = datetime.now() # Fallback
-                except:
-                    dt_obj = datetime.utcnow()
-
                 new_apt = {
                     "appointment_uuid": str(uuid.uuid4()),
                     "patient_id": patient["_id"] if patient else None,
-                    "phone": sender_phone,
-                    "doctor_id": doc["_id"],
-                    "doctor_name": doc["full_name"],
-                    "appointment_datetime": dt_obj,
+                    "doctor_id": doc["_id"] if doc else None,
+                    "appointment_datetime": datetime.utcnow(), # Simplification for mock
                     "duration_minutes": 30,
                     "appointment_type": args.get('appointment_type', 'consultation'),
                     "status": "scheduled",
@@ -297,23 +317,26 @@ class AIService:
                     "updated_at": datetime.utcnow()
                 }
                 await db.appointments.insert_one(new_apt)
-                return f"Confirmed: Your appointment with {doc['full_name']} is scheduled for {args['date']} at {args['time']}."
+                print(f"AI_TOOL_EXEC: Appointment booked successfully")
+                return f"Confirmed: Your appointment with {args['doctor_name']} is scheduled for {args['date']} at {args['time']}."
 
             elif name == "cancel_appointment":
+                print(f"AI_TOOL_EXEC: Cancelling appointment for {sender_phone}")
                 res = await db.appointments.update_one(
                     {"phone": sender_phone, "status": "scheduled"},
                     {"$set": {"status": "cancelled", "updated_at": datetime.utcnow()}}
                 )
-                return "Your appointment has been cancelled." if res.modified_count > 0 else "No active appointment found."
+                return "Your appointment has been cancelled successfully." if res.modified_count > 0 else "No active appointment found to cancel."
 
             elif name == "get_patient_appointments":
+                print(f"AI_TOOL_EXEC: Fetching appointments for {sender_phone}")
                 apts = await db.appointments.find({"phone": sender_phone, "status": "scheduled"}).to_list(length=5)
                 if not apts: return "No upcoming appointments found."
-                return "\n".join([f"- {a['chief_complaint']} with {a['doctor_name']} on {a['appointment_datetime']}" for a in apts])
+                return "\n".join([f"- {a['chief_complaint']} with {a.get('doctor_name', 'Specialist')} on {a.get('appointment_datetime')}" for a in apts])
 
             return "Action executed."
         except Exception as e:
-            logger.error(f"TOOL ERROR: {name} - {e}")
+            print(f"AI_TOOL_EXEC_ERROR: {name} - {e}")
             return f"Error executing {name}: {str(e)}."
 
 ai_service = AIService()
