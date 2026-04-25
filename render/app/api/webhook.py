@@ -2,6 +2,7 @@ from fastapi import APIRouter, Form, Response, BackgroundTasks
 from app.services.whatsapp_service import whatsapp_service
 from app.services.ai_service import ai_service
 from app.db.mongodb import get_db
+from app.logger import logger
 from datetime import datetime
 import traceback
 
@@ -12,7 +13,7 @@ async def process_and_audit(phone: str, message: str):
     db = get_db()
     try:
         # 1. Log Inbound Message
-        print(f"AUDIT [INBOUND]: {phone} -> '{message}'")
+        logger.info(f"WHATSAPP INBOUND: From={phone} Body='{message}'")
         if db is not None:
             await db.messages.insert_one({
                 "phone": phone,
@@ -28,7 +29,7 @@ async def process_and_audit(phone: str, message: str):
         await whatsapp_service.send_custom_message(phone, response_text)
 
         # 4. Log Outbound Response
-        print(f"AUDIT [OUTBOUND]: '{response_text}' -> {phone}")
+        logger.info(f"WHATSAPP OUTBOUND: To={phone} Body='{response_text}'")
         if db is not None:
             await db.messages.insert_one({
                 "phone": phone,
@@ -38,8 +39,8 @@ async def process_and_audit(phone: str, message: str):
             })
 
     except Exception as e:
-        print(f"AUDIT CRITICAL ERROR: {e}")
-        traceback.print_exc()
+        logger.error(f"WEBHOOK CRITICAL ERROR: {e}")
+        logger.error(traceback.format_exc())
 
 @router.post("/webhook")
 async def whatsapp_webhook(
@@ -58,5 +59,5 @@ async def whatsapp_webhook(
         return Response(content="OK", media_type="text/plain", status_code=200)
         
     except Exception as e:
-        print(f"GATEWAY AUDIT ERROR: {e}")
+        logger.error(f"GATEWAY WEBHOOK ERROR: {e}")
         return Response(content="OK", status_code=200)
