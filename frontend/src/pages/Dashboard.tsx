@@ -101,9 +101,10 @@ export default function Dashboard() {
 
   const statCards = [
     { label: 'Today\'s Visits', value: stats?.today_appointments || 0, icon: Calendar, color: 'bg-[#44ddc1]/10 text-[#44ddc1]' },
-    { label: 'Clinical Assets', value: stats?.total_patients || 0, icon: Users, color: 'bg-blue-500/10 text-blue-400' },
-    { label: 'AI Node Syncs', value: stats?.ai_interactions || 0, icon: MessageSquare, color: 'bg-purple-500/10 text-purple-400' },
-    { label: 'Practice Load', value: stats?.efficiency || '94%', icon: Activity, color: 'bg-emerald-500/10 text-emerald-400' },
+    { label: 'Clinical Assets', value: stats?.total_patients || 0, icon: Users, color: 'bg-black/5 text-black' },
+    { label: 'Neural Activity', value: stats?.ai_interactions || 0, icon: MessageSquare, color: 'bg-[#7c3aed]/10 text-[#7c3aed]' },
+    { label: 'Practice Load', value: stats?.efficiency || '100%', icon: Activity, color: 'bg-black/5 text-black' },
+
   ];
 
   return (

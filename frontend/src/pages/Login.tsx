@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import axios from 'axios';
 import { Activity, Lock, Phone, AlertCircle, ArrowRight, ShieldCheck, Sparkles, Loader2 } from 'lucide-react';
+import { motion } from 'framer-motion';
 
 export default function Login() {
   const navigate = useNavigate();
@@ -40,65 +41,64 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-[#0b1326] relative overflow-hidden p-6 font-premium">
-      {/* Deep Space Decorative Elements */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#44ddc1]/5 blur-[120px] rounded-full -mr-32 -mt-32 -z-10" />
-      <div className="absolute bottom-0 left-0 w-[600px] h-[600px] bg-[#7c3aed]/5 blur-[120px] rounded-full -ml-32 -mb-32 -z-10" />
+    <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden p-6 font-premium">
+      {/* Decorative Elements */}
+      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#7c3aed]/5 blur-[120px] rounded-full -mr-32 -mt-32 -z-10" />
 
-      <div className="w-full max-w-[1100px] grid grid-cols-1 lg:grid-cols-2 glass-surface rounded-[3rem] shadow-2xl border border-white/5 overflow-hidden min-h-[700px] relative z-10">
+      <div className="w-full max-w-[1100px] grid grid-cols-1 lg:grid-cols-2 bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.1)] border border-zinc-100 overflow-hidden min-h-[700px] relative z-10">
         {/* Left Side: Clinical Sentinel Branding */}
-        <div className="hidden lg:flex flex-col justify-between bg-[#131b2e]/50 p-16 relative overflow-hidden border-r border-white/5">
+        <div className="hidden lg:flex flex-col justify-between bg-black p-16 relative overflow-hidden">
           <div className="absolute top-0 right-0 p-10 opacity-5">
-             <Activity size={350} className="text-[#44ddc1]" />
+             <Activity size={350} className="text-white" />
           </div>
           
           <div className="relative z-10">
             <div className="flex items-center gap-4 mb-16">
-              <div className="bg-[#44ddc1] text-[#00382f] p-3 rounded-2xl shadow-2xl shadow-[#44ddc1]/20">
+              <div className="bg-[#7c3aed] text-white p-3 rounded-xl shadow-2xl">
                 <Activity size={32} />
               </div>
-              <span className="text-2xl font-black text-[#dae2fd] italic tracking-tighter uppercase">NORMA AI</span>
+              <span className="text-2xl font-black text-white italic tracking-tighter uppercase">NORMA AI</span>
             </div>
             
-            <h2 className="text-7xl font-black text-[#dae2fd] tracking-tighter leading-[0.9] uppercase mb-10 italic">
+            <h2 className="text-7xl font-black text-white tracking-tighter leading-[0.9] uppercase mb-10 italic">
               Clinical<br />
-              <span className="text-[#44ddc1]">Sentinel</span>
+              <span className="text-[#7c3aed]">Sentinel</span>
             </h2>
-            <p className="text-[#85948f] text-xl font-medium leading-relaxed max-w-sm">
-              Global clinical mesh access enabled. Authenticate clinical terminal ID to establish secure session.
+            <p className="text-zinc-500 text-xl font-medium leading-relaxed max-w-sm">
+              Global clinical mesh access enabled. Authenticate terminal ID to establish secure session.
             </p>
           </div>
 
           <div className="relative z-10 flex items-center gap-6">
             <div className="flex -space-x-3">
               {[1,2,3,4].map(i => (
-                <div key={i} className="w-12 h-12 rounded-full border-4 border-[#131b2e] bg-[#0b1326] overflow-hidden">
-                  <img src={`https://i.pravatar.cc/100?img=${i+20}`} alt="Clinical Staff" className="opacity-80 grayscale hover:grayscale-0 transition-all cursor-crosshair" />
+                <div key={i} className="w-12 h-12 rounded-full border-4 border-black bg-zinc-900 overflow-hidden">
+                  <img src={`https://i.pravatar.cc/100?img=${i+20}`} alt="Staff" className="opacity-80 grayscale hover:opacity-100 transition-all" />
                 </div>
               ))}
             </div>
-            <p className="text-[10px] font-black text-[#85948f] uppercase tracking-[0.25em] leading-tight">
-              1,240+ Active Nodes<br /><span className="text-[#44ddc1]">Secure Multi-Sync</span>
+            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.25em] leading-tight">
+              1,240+ Active Nodes<br /><span className="text-[#7c3aed]">Secure Multi-Sync</span>
             </p>
           </div>
         </div>
 
         {/* Right Side: Authentication Terminal */}
-        <div className="p-12 md:p-24 flex flex-col justify-center relative bg-[#0b1326]/30">
+        <div className="p-12 md:p-24 flex flex-col justify-center relative bg-white">
           <div className="mb-16">
-            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-[#44ddc1]/5 border border-[#44ddc1]/20 mb-8">
-              <ShieldCheck size={16} className="text-[#44ddc1]" />
-              <span className="text-[10px] font-black tracking-[0.3em] text-[#44ddc1] uppercase">Authorize Session</span>
+            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-zinc-50 border border-zinc-200 mb-8">
+              <ShieldCheck size={16} className="text-[#7c3aed]" />
+              <span className="text-[10px] font-black tracking-[0.3em] text-black uppercase">Authorize Session</span>
             </div>
-            <h3 className="text-5xl font-black text-[#dae2fd] tracking-tighter uppercase italic leading-none">Sign In</h3>
-            <p className="text-[#85948f] font-bold text-xs uppercase tracking-[0.4em] mt-4 opacity-60">Initializing clinical protocol...</p>
+            <h3 className="text-5xl font-black text-black tracking-tighter uppercase italic leading-none">Sign In</h3>
+            <p className="text-zinc-400 font-bold text-xs uppercase tracking-[0.4em] mt-4 opacity-60">Initializing protocol...</p>
           </div>
           
           {error && (
             <motion.div 
               initial={{ x: -10, opacity: 0 }}
               animate={{ x: 0, opacity: 1 }}
-              className="bg-red-500/10 border border-red-500/20 p-5 rounded-2xl mb-10 flex items-center gap-4 text-red-400 text-sm font-bold animate-in shake duration-500"
+              className="bg-red-50 border border-red-100 p-5 rounded-xl mb-10 flex items-center gap-4 text-red-500 text-sm font-bold"
             >
               <AlertCircle size={20} />
               {error}
@@ -107,14 +107,14 @@ export default function Login() {
 
           <form onSubmit={handleLogin} className="space-y-10">
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-[#85948f] uppercase tracking-[0.3em] ml-2">Terminal ID (Phone)</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] ml-2">Terminal ID</label>
               <div className="relative group">
-                <Phone size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-[#3c4a46] group-focus-within:text-[#44ddc1] transition-colors" />
+                <Phone size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-[#7c3aed] transition-colors" />
                 <input 
                   type="text" 
                   value={phone}
                   onChange={(e) => setPhone(e.target.value)}
-                  className="input-clinical w-full pl-16 pr-8 py-6 rounded-[2rem] text-lg font-black tracking-tight"
+                  className="w-full bg-zinc-50 border-2 border-transparent text-black pl-16 pr-8 py-6 rounded-xl text-lg font-black tracking-tight outline-none focus:bg-white focus:border-black transition-all shadow-inner"
                   placeholder="Enter Phone..."
                   required
                 />
@@ -122,14 +122,14 @@ export default function Login() {
             </div>
             
             <div className="space-y-4">
-              <label className="text-[10px] font-black text-[#85948f] uppercase tracking-[0.3em] ml-2">Access Key</label>
+              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] ml-2">Access Key</label>
               <div className="relative group">
-                <Lock size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-[#3c4a46] group-focus-within:text-[#44ddc1] transition-colors" />
+                <Lock size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-[#7c3aed] transition-colors" />
                 <input 
                   type="password" 
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
-                  className="input-clinical w-full pl-16 pr-8 py-6 rounded-[2rem] text-lg font-black tracking-tight"
+                  className="w-full bg-zinc-50 border-2 border-transparent text-black pl-16 pr-8 py-6 rounded-xl text-lg font-black tracking-tight outline-none focus:bg-white focus:border-black transition-all shadow-inner"
                   placeholder="••••••••"
                   required
                 />
@@ -139,23 +139,23 @@ export default function Login() {
             <button 
               type="submit" 
               disabled={loading}
-              className="btn-clinical w-full group relative py-8 rounded-[2rem] mt-6"
+              className="w-full bg-black text-white py-8 rounded-xl font-black uppercase tracking-[0.4em] text-xs hover:bg-[#7c3aed] transition-all active:scale-95 shadow-2xl shadow-zinc-900/10 mt-6"
             >
               {loading ? (
                 <Loader2 className="animate-spin mx-auto" size={24} />
               ) : (
                 <div className="flex items-center justify-center gap-4">
-                  <span className="text-xs uppercase tracking-[0.5em]">Establish Link</span>
-                  <ArrowRight size={22} className="group-hover:translate-x-2 transition-transform duration-500" />
+                  <span>Establish Link</span>
+                  <ArrowRight size={20} className="text-[#7c3aed]" />
                 </div>
               )}
             </button>
           </form>
 
           <div className="mt-20 text-center">
-            <div className="flex items-center justify-center gap-5 opacity-20 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-1000 cursor-help group">
-              <Sparkles size={18} className="group-hover:text-[#44ddc1] transition-colors" />
-              <p className="text-[10px] text-[#85948f] font-black uppercase tracking-[0.5em]">Multi-Node Secure Sync</p>
+            <div className="flex items-center justify-center gap-5 opacity-20 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-1000">
+              <Sparkles size={18} className="text-[#7c3aed]" />
+              <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.5em]">Multi-Node Secure Sync</p>
             </div>
           </div>
         </div>

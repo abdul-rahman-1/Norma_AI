@@ -66,9 +66,9 @@ export default function Settings() {
             initial={{ opacity: 0, y: -50 }}
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -50 }}
-            className="fixed top-10 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-white px-8 py-4 rounded-[2rem] flex items-center gap-3 shadow-2xl shadow-emerald-500/20 font-black uppercase tracking-widest text-[10px]"
+            className="fixed top-10 left-1/2 -translate-x-1/2 z-50 bg-black text-white px-8 py-4 rounded-[2rem] flex items-center gap-3 shadow-2xl shadow-zinc-900/20 font-black uppercase tracking-widest text-[10px]"
           >
-            <CheckCircle2 size={20} />
+            <CheckCircle2 size={20} className="text-[#7c3aed]" />
             Configuration Saved Successfully
           </motion.div>
         )}

@@ -42,36 +42,36 @@ export default function BulkUpload() {
   };
 
   return (
-    <div className="max-w-6xl mx-auto space-y-12 animate-in fade-in duration-1000 pb-20 px-4">
+    <div className="max-w-[1400px] mx-auto space-y-12 animate-in fade-in duration-700 pb-20 px-4">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-end gap-6">
         <div>
-          <h1 className="text-4xl font-black text-[#dae2fd] tracking-tight uppercase italic">Data Ingestion</h1>
-          <p className="text-[#85948f] mt-2 font-medium text-lg italic">High-fidelity clinical record synchronization and reconciliation.</p>
+          <h1 className="text-4xl font-black text-black tracking-tight uppercase italic">Ingestion Matrix</h1>
+          <p className="text-zinc-500 mt-2 font-bold text-lg">High-fidelity clinical record synchronization and reconciliation.</p>
         </div>
-        <div className="flex items-center gap-3 px-4 py-2 rounded-xl bg-[#44ddc1]/5 border border-[#44ddc1]/20">
-           <ShieldCheck size={16} className="text-[#44ddc1]" />
-           <span className="text-[10px] font-black text-[#44ddc1] uppercase tracking-widest">Secure Ingestion Node</span>
+        <div className="flex items-center gap-3 px-6 py-3 rounded-xl bg-zinc-50 border border-zinc-200">
+           <ShieldCheck size={18} className="text-[#7c3aed]" />
+           <span className="text-[10px] font-black text-black uppercase tracking-widest">Secure Ingestion node</span>
         </div>
       </div>
 
-      <div className="glass-surface p-10 md:p-16 rounded-[3rem] border border-white/5 relative overflow-hidden bg-[#131b2e]/50">
-        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#44ddc1]/5 blur-[100px] -mr-48 -mt-48 -z-10 rounded-full" />
+      <div className="bg-white p-12 md:p-20 rounded-[3rem] border-2 border-zinc-50 shadow-sm relative overflow-hidden">
+        <div className="absolute top-0 right-0 w-[400px] h-[400px] bg-[#7c3aed]/5 blur-[100px] -mr-48 -mt-48 -z-10 rounded-full" />
         
-        <div className="max-w-3xl mx-auto text-center">
-          <div className="flex flex-col items-center mb-10">
-            <div className="w-16 h-16 rounded-2xl bg-[#0b1326] flex items-center justify-center text-[#44ddc1] shadow-xl border border-[#44ddc1]/10 mb-6">
-              <DatabaseZap size={32} />
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="flex flex-col items-center mb-16">
+            <div className="w-20 h-20 rounded-2xl bg-black flex items-center justify-center text-[#7c3aed] shadow-2xl mb-8">
+              <DatabaseZap size={36} />
             </div>
-            <h2 className="text-2xl font-black text-[#dae2fd] tracking-tight uppercase italic">Upload Dataset</h2>
+            <h2 className="text-3xl font-black text-black tracking-tight uppercase italic">Provision Dataset</h2>
           </div>
           
-          <div className="border-4 border-dashed border-[#3c4a46]/20 rounded-[2.5rem] p-12 md:p-20 text-center group hover:border-[#44ddc1]/40 transition-all duration-700 bg-[#0b1326]/30 hover:bg-[#0b1326]/50 relative overflow-hidden">
+          <div className="border-4 border-dashed border-zinc-100 rounded-[3rem] p-16 md:p-24 text-center group hover:border-black transition-all duration-700 bg-zinc-50/50 hover:bg-white relative overflow-hidden shadow-inner">
             <div className="relative z-10">
-              <div className="mx-auto h-24 w-24 bg-[#131b2e] rounded-3xl border border-white/5 shadow-2xl flex items-center justify-center text-[#3c4a46] group-hover:text-[#44ddc1] group-hover:scale-110 transition-all duration-700 mb-8">
-                <Upload size={40} />
+              <div className="mx-auto h-28 w-28 bg-black rounded-[2rem] shadow-2xl flex items-center justify-center text-zinc-500 group-hover:text-[#7c3aed] transition-all duration-700 mb-10">
+                <Upload size={48} />
               </div>
-              <h3 className="text-2xl font-black text-[#dae2fd] mb-3 uppercase tracking-tight italic">Select Clinical Manifest</h3>
-              <p className="text-[#85948f] mb-10 max-w-sm mx-auto font-bold text-sm uppercase tracking-wider leading-relaxed opacity-70">Supports standardized .xlsx and .xls formats only.</p>
+              <h3 className="text-3xl font-black text-black mb-4 uppercase tracking-tight italic">Identify Manifest</h3>
+              <p className="text-zinc-400 mb-12 max-w-sm mx-auto font-bold text-sm uppercase tracking-widest leading-relaxed">Standardized .xlsx format authorized for ingestion.</p>
               
               <input 
                 type="file" 
@@ -82,52 +82,52 @@ export default function BulkUpload() {
               />
               <label 
                 htmlFor="file-upload" 
-                className="cursor-pointer btn-clinical inline-flex items-center gap-4"
+                className="cursor-pointer bg-black text-white px-12 py-6 rounded-xl font-black uppercase tracking-[0.3em] text-xs hover:bg-[#7c3aed] transition-all active:scale-95 flex items-center gap-4 mx-auto w-fit shadow-2xl"
               >
                 <FileType size={20} />
-                Browse Local Storage
+                Access Local Drive
               </label>
               
               {file && (
-                <div className="mt-12 flex items-center justify-center gap-5 text-[#dae2fd] bg-[#131b2e] py-5 px-8 rounded-2xl w-fit mx-auto border border-[#44ddc1]/20 shadow-2xl animate-in zoom-in-95">
-                  <div className="p-2 bg-[#44ddc1]/10 rounded-xl text-[#44ddc1]">
-                    <FileType size={24} />
+                <div className="mt-16 flex items-center justify-center gap-6 text-black bg-zinc-50 py-6 px-10 rounded-2xl w-fit mx-auto border border-zinc-200 shadow-xl animate-in zoom-in-95">
+                  <div className="p-3 bg-black rounded-xl text-[#7c3aed]">
+                    <FileType size={28} />
                   </div>
                   <div className="text-left">
-                    <span className="font-black text-sm tracking-tight block truncate max-w-[200px]">{file.name}</span>
-                    <span className="text-[10px] font-black text-[#85948f] uppercase tracking-widest mt-0.5">{(file.size / 1024).toFixed(1)} KB • Verified File</span>
+                    <span className="font-black text-base tracking-tight block truncate max-w-[250px]">{file.name}</span>
+                    <span className="text-[10px] font-black text-zinc-400 uppercase tracking-widest mt-1">{(file.size / 1024).toFixed(1)} KB • Integrity Verified</span>
                   </div>
-                  <button onClick={() => setFile(null)} className="ml-4 text-[#85948f] hover:text-red-400 transition-colors">
-                    <X size={20} />
+                  <button onClick={() => setFile(null)} className="ml-6 text-zinc-300 hover:text-red-500 transition-colors">
+                    <X size={24} />
                   </button>
                 </div>
               )}
             </div>
           </div>
           
-          <div className="mt-12 flex flex-col items-center">
+          <div className="mt-16 flex flex-col items-center">
             <button
               onClick={handleUpload}
               disabled={!file || status === 'uploading'}
-              className={`w-full group relative py-6 rounded-[2rem] font-black text-xs uppercase tracking-[0.4em] transition-all flex items-center justify-center gap-4 shadow-2xl ${
+              className={`w-full group relative py-8 rounded-[2rem] font-black text-xs uppercase tracking-[0.5em] transition-all flex items-center justify-center gap-6 shadow-2xl ${
                 !file || status === 'uploading' 
-                  ? 'bg-white/5 text-[#3c4a46] cursor-not-allowed border border-white/5' 
-                  : 'bg-[#44ddc1] text-[#00382f] hover:shadow-[0_0_40px_rgba(68,221,193,0.3)]'
+                  ? 'bg-zinc-100 text-zinc-300 cursor-not-allowed border border-zinc-200' 
+                  : 'bg-black text-white hover:bg-[#7c3aed]'
               }`}
             >
               {status === 'uploading' ? (
                 <>
-                  <Loader2 className="animate-spin" size={20} />
-                  Analyzing Clinical Patterns...
+                  <Loader2 className="animate-spin" size={24} />
+                  Synchronizing Neural Mesh...
                 </>
               ) : (
                 <>
                   Authorize Ingestion
-                  <ArrowRight size={20} className="group-hover:translate-x-2 transition-transform duration-500" />
+                  <ArrowRight size={24} className="text-[#7c3aed] group-hover:translate-x-2 transition-transform duration-500" />
                 </>
               )}
             </button>
-            <p className="mt-6 text-[9px] font-black text-[#85948f] uppercase tracking-[0.3em] opacity-40 italic">End-to-end encrypted protocol active</p>
+            <p className="mt-8 text-[10px] font-black text-zinc-400 uppercase tracking-[0.4em] italic opacity-60">System encrypted clinical bridge v3.0 engaged</p>
           </div>
         </div>
       </div>
@@ -137,54 +137,54 @@ export default function BulkUpload() {
           <motion.div 
             initial={{ y: 20, opacity: 0 }}
             animate={{ y: 0, opacity: 1 }}
-            className="bg-[#131b2e] p-12 rounded-[3rem] border border-[#44ddc1]/20 shadow-2xl relative overflow-hidden"
+            className="bg-white p-12 md:p-16 rounded-[3.5rem] border-2 border-zinc-50 shadow-2xl relative overflow-hidden"
           >
-            <div className="flex items-center gap-6 text-[#dae2fd] mb-12 relative z-10">
-              <div className="bg-[#44ddc1]/20 p-5 rounded-3xl text-[#44ddc1] border border-[#44ddc1]/20">
-                <CheckCircle size={32} />
+            <div className="flex items-center gap-8 text-black mb-16 relative z-10">
+              <div className="bg-black p-6 rounded-[2rem] text-[#7c3aed] shadow-2xl">
+                <CheckCircle size={40} />
               </div>
               <div>
-                <h2 className="text-3xl font-black tracking-tighter uppercase italic leading-none">Ingestion Complete</h2>
-                <p className="text-xs text-[#85948f] font-bold uppercase tracking-widest mt-2 italic">Data reconciliation successful</p>
+                <h2 className="text-4xl font-black tracking-tighter uppercase italic leading-none">Ingestion successful</h2>
+                <p className="text-sm text-zinc-500 font-bold uppercase tracking-widest mt-3 italic">Clinical registry updated across all nodes</p>
               </div>
             </div>
             
-            <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 mb-12 relative z-10">
+            <div className="grid grid-cols-1 sm:grid-cols-4 gap-8 mb-16 relative z-10">
               {[
-                { label: 'Identified Assets', value: summary.total, color: 'text-[#dae2fd]' },
-                { label: 'New Records', value: summary.inserted, color: 'text-[#44ddc1]' },
-                { label: 'Reconciled', value: summary.skipped, color: 'text-[#85948f]' },
-                { label: 'Anomalies', value: summary.errors.length, color: 'text-red-400' },
+                { label: 'Total Identified', value: summary.total, color: 'text-black' },
+                { label: 'New Identities', value: summary.inserted, color: 'text-[#7c3aed]' },
+                { label: 'Reconciled', value: summary.skipped, color: 'text-zinc-400' },
+                { label: 'Anomalies', value: summary.errors.length, color: 'text-red-500' },
               ].map((stat, i) => (
-                <div key={i} className="bg-[#0b1326] p-8 rounded-3xl border border-white/5 flex flex-col shadow-inner">
-                  <p className="text-[9px] font-black text-[#85948f] uppercase tracking-[0.2em] mb-3">{stat.label}</p>
-                  <p className={`text-4xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
+                <div key={i} className="bg-zinc-50 p-10 rounded-[2.5rem] flex flex-col border border-zinc-100 shadow-inner">
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mb-4">{stat.label}</p>
+                  <p className={`text-5xl font-black tracking-tighter ${stat.color}`}>{stat.value}</p>
                 </div>
               ))}
             </div>
 
             {summary.errors.length > 0 && (
               <div className="space-y-8 relative z-10">
-                <div className="flex items-center gap-3">
-                  <AlertCircle size={20} className="text-red-400" />
-                  <h3 className="font-black text-[#dae2fd] uppercase tracking-widest text-xs italic">Anomaly diagnostic report</h3>
+                <div className="flex items-center gap-4">
+                  <AlertCircle size={24} className="text-red-500" />
+                  <h3 className="font-black text-black uppercase tracking-widest text-sm italic">Anomaly Diagnostic Matrix</h3>
                 </div>
-                <div className="bg-[#0b1326] rounded-[2rem] overflow-hidden border border-white/5 shadow-2xl">
+                <div className="bg-zinc-50 rounded-[2.5rem] overflow-hidden border border-zinc-100 shadow-inner">
                   <table className="w-full text-left">
-                    <thead className="bg-[#171f33] border-b border-white/5">
+                    <thead className="bg-black text-white">
                       <tr>
-                        <th className="px-8 py-6 text-[9px] font-black text-[#85948f] uppercase tracking-widest">Reference Row</th>
-                        <th className="px-8 py-6 text-[9px] font-black text-[#85948f] uppercase tracking-widest">AI Diagnostic Output</th>
+                        <th className="px-10 py-8 text-[11px] font-black uppercase tracking-[0.3em]">Identity Reference</th>
+                        <th className="px-10 py-8 text-[11px] font-black uppercase tracking-[0.3em]">Error Vector Description</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-white/5 text-[#dae2fd]">
+                    <tbody className="divide-y divide-zinc-200">
                       {summary.errors.map((err: any, idx: number) => (
-                        <tr key={idx} className="hover:bg-[#171f33] transition-colors group">
-                          <td className="px-8 py-6">
-                            <span className="text-sm font-black group-hover:text-[#44ddc1] transition-colors">Row Vector {err.row}</span>
+                        <tr key={idx} className="hover:bg-white transition-colors">
+                          <td className="px-10 py-8">
+                            <span className="text-sm font-black uppercase italic">Row Object {err.row}</span>
                           </td>
-                          <td className="px-8 py-6">
-                            <span className="text-sm text-red-400 font-bold tracking-tight opacity-80">{err.reason}</span>
+                          <td className="px-10 py-8">
+                            <span className="text-sm text-red-500 font-bold tracking-tight">{err.reason}</span>
                           </td>
                         </tr>
                       ))}
@@ -202,19 +202,19 @@ export default function BulkUpload() {
           <motion.div 
             initial={{ scale: 0.95, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
-            className="bg-[#131b2e] p-10 rounded-[3rem] border border-red-500/20 flex items-start gap-8 shadow-2xl"
+            className="bg-white p-12 rounded-[3.5rem] border-4 border-red-50 flex items-start gap-10 shadow-2xl"
           >
-            <div className="bg-red-500/10 p-5 rounded-3xl border border-red-500/20 text-red-400 shadow-inner">
-              <AlertCircle size={32} />
+            <div className="bg-red-500 p-6 rounded-[2rem] text-white shadow-2xl shadow-red-500/20">
+              <AlertCircle size={40} />
             </div>
             <div className="flex-1 pt-2">
-              <h3 className="text-2xl font-black text-red-400 mb-2 uppercase tracking-tighter italic">Integration Failure</h3>
-              <p className="text-[#85948f] font-bold text-lg leading-relaxed italic">The clinical sentinel could not establish a data link: {errorMsg}</p>
+              <h3 className="text-3xl font-black text-red-500 mb-4 uppercase tracking-tighter italic leading-none">Bridge Failure</h3>
+              <p className="text-zinc-500 font-bold text-xl leading-relaxed italic">Neural link rejected manifest ingestion: {errorMsg}</p>
               <button 
                 onClick={() => setStatus('idle')}
-                className="mt-8 bg-[#0b1326] text-[#dae2fd] px-10 py-4 rounded-2xl text-[10px] font-black uppercase tracking-[0.3em] hover:bg-red-500 hover:text-white transition-all shadow-2xl border border-white/5"
+                className="mt-12 bg-black text-white px-12 py-5 rounded-xl text-[11px] font-black uppercase tracking-[0.4em] hover:bg-[#7c3aed] transition-all shadow-2xl active:scale-95"
               >
-                Initialize Retry Protocol
+                Abort & Initialize Retry
               </button>
             </div>
           </motion.div>
