@@ -59,12 +59,21 @@ async def process_and_audit(phone: str, message: str):
 async def whatsapp_webhook(
     background_tasks: BackgroundTasks,
     Body: str = Form(...),
-    From: str = Form(...)
+    From: str = Form(...),
+    To: str = Form(None),
+    SmsSid: str = Form(None)
 ):
     """Gateway entry point. Responds to Twilio instantly and audits in background."""
     try:
+        timestamp = datetime.utcnow().isoformat() + "Z"
+        flush_print("\n[INCOMING MESSAGE]")
+        flush_print(f"TIME: {timestamp}")
+        flush_print(f"FROM: {From}")
+        flush_print(f"TO: {To}")
+        flush_print(f"MESSAGE: \"{Body}\"")
+        flush_print(f"SID: {SmsSid}")
+        
         sender_phone = From.replace('whatsapp:', '').strip()
-        flush_print(f"GATEWAY: Received webhook from {sender_phone}")
         
         # Dispatch to background audit stream
         background_tasks.add_task(process_and_audit, sender_phone, Body)
@@ -73,5 +82,10 @@ async def whatsapp_webhook(
         return Response(content="", media_type="text/xml", status_code=200)
         
     except Exception as e:
-        flush_print(f"GATEWAY_WEBHOOK_EXCEPTION: {e}")
+        timestamp = datetime.utcnow().isoformat() + "Z"
+        flush_print(f"\n[ERROR]")
+        flush_print(f"TIME: {timestamp}")
+        flush_print(f"FROM: {From if 'From' in locals() else 'Unknown'}")
+        flush_print(f"MESSAGE: {Body if 'Body' in locals() else 'Unknown'}")
+        flush_print(f"ERROR: {traceback.format_exc()}")
         return Response(content="", status_code=200)

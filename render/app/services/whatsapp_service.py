@@ -1,8 +1,14 @@
 from twilio.rest import Client
 from app.config import get_settings
+from datetime import datetime
 import logging
+import sys
 
 settings = get_settings()
+
+def flush_print(msg):
+    print(msg)
+    sys.stdout.flush()
 
 class WhatsAppService:
     def __init__(self):
@@ -18,17 +24,18 @@ class WhatsAppService:
             clean_phone = to_phone.strip().replace(" ", "").replace("-", "")
             
             # 2. Enforce E.164 (ensure it starts with +)
-            # Note: If no country code is present, we might need a default, 
-            # but for now we'll just ensure the '+' is there for the API.
             if not clean_phone.startswith('+'):
-                # Heuristic: if it's 10 digits and starts with 9/8/7 (India), add +91
-                if len(clean_phone) == 10:
-                    clean_phone = f"+91{clean_phone}"
-                else:
-                    clean_phone = f"+{clean_phone}"
+                clean_phone = f"+{clean_phone}"
 
             to_whatsapp = f"whatsapp:{clean_phone}"
-            print(f"TWILIO DISPATCH: Sending to {to_whatsapp}")
+            
+            # Log outgoing message
+            timestamp = datetime.utcnow().isoformat() + "Z"
+            flush_print("\n[OUTGOING MESSAGE]")
+            flush_print(f"TIME: {timestamp}")
+            flush_print(f"TO: {to_whatsapp}")
+            flush_print(f"FROM: {self.from_number}")
+            flush_print(f"RESPONSE: \"{safe_body}\"")
             
             message = self.client.messages.create(
                 body=safe_body, 
@@ -37,7 +44,11 @@ class WhatsAppService:
             )
             return message.sid
         except Exception as e:
-            print(f"NORMA AI ERROR (WhatsApp Service): {e}")
+            timestamp = datetime.utcnow().isoformat() + "Z"
+            flush_print(f"\n[ERROR - OUTGOING]")
+            flush_print(f"TIME: {timestamp}")
+            flush_print(f"TO: {to_phone if 'to_phone' in locals() else 'Unknown'}")
+            flush_print(f"ERROR: {e}")
             return None
 
 whatsapp_service = WhatsAppService()
