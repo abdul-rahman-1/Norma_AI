@@ -2,97 +2,121 @@
 @import "tailwindcss";
 
 :root {
-  --bg-deep: #0b1326;
-  --bg-surface: #131b2e;
-  --accent-teal: #44ddc1;
-  --accent-purple: #7c3aed;
-  --text-primary: #dae2fd;
-  --text-secondary: #85948f;
-  --border-glass: rgba(60, 74, 70, 0.1);
+  --sota-indigo: #0f172a;
+  --sota-purple: #7c3aed;
+  --sota-lavender: #a78bfa;
+  --sota-cyan: #22d3ee;
+  --sota-white: #ffffff;
+  --sota-bg: #f8fafc;
 }
 
 html {
   scroll-behavior: smooth;
-  font-size: 15px;
+  font-size: 15px; /* Slightly reduced base font size for "Pro" feel */
 }
 
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background-color: var(--bg-deep);
-  color: var(--text-primary);
+  background-color: var(--sota-bg);
+  color: var(--sota-indigo);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5, h6, .font-display, .font-premium {
+h1, h2, h3, h4, h5, h6, .font-display {
   font-family: 'Outfit', sans-serif;
   letter-spacing: -0.03em;
 }
 
-/* Glassmorphism Surface - "Clinical Luminary" Core */
-.glass-surface {
-  background: rgba(19, 27, 46, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-glass);
-  box-shadow: 
-    0 4px 15px -1px rgba(0, 0, 0, 0.2),
-    0 10px 30px -5px rgba(0, 0, 0, 0.3);
+/* Ethereal Surface - Thinner for Compact UI */
+.ethereal-surface {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    0 4px 15px -1px rgba(0, 0, 0, 0.01),
+    0 6px 20px -5px rgba(0, 0, 0, 0.02);
 }
 
-.clinical-border {
+.ethereal-border {
   position: relative;
 }
 
-.clinical-border::before {
+.ethereal-border::before {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(68, 221, 193, 0.3), rgba(68, 221, 193, 0.05), transparent);
+  padding: 1.2px;
+  background: linear-gradient(135deg, rgba(255,255,255,1), rgba(255,255,255,0.2), rgba(124,58,237,0.1));        
   mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
   -webkit-mask-composite: xor;
   mask-composite: exclude;
   pointer-events: none;
 }
 
-/* Bento Card - Clinical Variant */
+/* Bento Grid Utilities - Compact Version */
 .bento-card {
-  background: var(--bg-surface);
-  border-radius: 2rem;
-  padding: 1.75rem;
-  border: 1px solid var(--border-glass);
-  box-shadow: 0 4px 20px -1px rgba(0, 0, 0, 0.2);
+  background: #ffffff;
+  border-radius: 2rem; /* Reduced from 2.5rem */
+  padding: 1.75rem; /* Reduced from 2rem */
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 15px -1px rgba(0, 0, 0, 0.03);
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .bento-card:hover {
   transform: translateY(-3px);
-  border-color: rgba(68, 221, 193, 0.2);
-  box-shadow: 0 15px 35px -12px rgba(68, 221, 193, 0.1);
+  box-shadow: 0 15px 35px -12px rgba(124, 58, 237, 0.08);
 }
 
-/* Buttons - Clinical Luminary */
-.btn-clinical {
-  @apply bg-[#44ddc1] text-[#00382f] px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(68,221,193,0.2)] hover:shadow-[0_0_30px_rgba(68,221,193,0.4)] active:scale-95;
+/* High-Contrast Interactive Elements - Compact */
+.btn-sota {
+  @apply bg-zinc-900 text-white px-8 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-[0.3em] transition-all hover:bg-purple-600 hover:shadow-xl hover:shadow-purple-500/15 active:scale-95;
 }
 
-.input-clinical {
-  @apply bg-[#0b1326] border border-[#3c4a46]/20 text-[#dae2fd] px-5 py-3 rounded-xl outline-none focus:border-[#44ddc1]/40 transition-all font-medium text-sm;
+.input-sota {
+  @apply bg-white/50 border border-gray-100 px-5 py-3 rounded-xl outline-none focus:bg-white focus:ring-4 focus:ring-purple-500/5 focus:border-purple-200 transition-all font-medium text-sm;
 }
 
 /* Premium Scrollbar */
 .scrollbar-thin::-webkit-scrollbar { width: 4px; }
 .scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(68, 221, 193, 0.1);
+  background: rgba(15, 23, 42, 0.03);
   border-radius: 100px;
 }
-.scrollbar-thin:hover::-webkit-scrollbar-thumb { background: rgba(68, 221, 193, 0.3); }
+.scrollbar-thin:hover::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.2); }
 
-/* Animation Utilities */
+/* Custom Utilities */
+.nm-luxury {
+  background: #ffffff;
+  box-shadow: 0 4px 15px -1px rgba(0, 0, 0, 0.03), 0 2px 8px -1px rgba(0, 0, 0, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.nm-button-luxury {
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  border: 1px solid #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.nm-button-luxury:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+}
+
+.glass-luxury {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
 .animate-float {
   animation: float 5s ease-in-out infinite;
 }
@@ -101,9 +125,4 @@ h1, h2, h3, h4, h5, h6, .font-display, .font-premium {
   0% { transform: translateY(0px); }
   50% { transform: translateY(-6px); }
   100% { transform: translateY(0px); }
-}
-
-/* GSAP/Tailwind Entry */
-.fade-in-clinical {
-  @apply animate-in fade-in duration-700;
 }
