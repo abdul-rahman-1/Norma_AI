@@ -103,91 +103,91 @@ export default function Doctors() {
         </div>
         <button 
           onClick={() => { setEditingDoctor(null); setFormData(initialForm); setError(''); setShowModal(true); }}
-          className="group bg-[#09090b] text-white px-10 py-5 rounded-[2rem] text-sm font-black shadow-2xl shadow-zinc-900/20 hover:bg-blue-600 transition-all flex items-center gap-3"
+          className="group bg-[#0b1326] text-white px-10 py-5 rounded-[1.8rem] text-sm font-black shadow-2xl shadow-zinc-900/20 hover:bg-violet-600 transition-all flex items-center gap-4"
         >
-          <Plus size={20} className="text-blue-400 group-hover:rotate-90 transition-transform duration-500" /> 
+          <Plus size={20} className="text-violet-400 group-hover:rotate-90 transition-transform duration-500" /> 
           Add Provider
         </button>
       </div>
 
-      <div className="flex flex-col md:flex-row gap-6">
-        <div className="flex-1 bg-white p-5 rounded-[1.8rem] border border-gray-100 shadow-sm flex items-center gap-5 focus-within:ring-4 focus-within:ring-blue-500/5 focus-within:border-blue-200 transition-all">
-          <Search size={22} className="text-gray-300 ml-3" />
+      <div className="flex flex-col md:flex-row gap-8">
+        <div className="flex-1 nm-inset p-5 rounded-[1.8rem] border border-white flex items-center gap-5 focus-within:ring-4 focus-within:ring-violet-500/5 focus-within:border-violet-200 transition-all">
+          <Search size={22} className="text-slate-300 ml-3" />
           <input 
             type="text" 
             placeholder="Search by name, specialty, or WhatsApp number..." 
-            className="bg-transparent border-none outline-none text-zinc-900 w-full py-2 font-bold text-sm placeholder-gray-300"
+            className="bg-transparent border-none outline-none text-slate-900 w-full py-2 font-bold text-sm placeholder-slate-300"
             value={search}
             onChange={(e) => setSearch(e.target.value)}
           />
         </div>
-        <button className="bg-white px-8 py-5 rounded-[1.8rem] border border-gray-100 text-gray-400 font-black text-[10px] uppercase tracking-[0.3em] flex items-center gap-3 hover:bg-gray-50 transition-all shadow-sm">
+        <button className="nm-button px-8 py-5 rounded-[1.8rem] text-slate-400 font-black text-[10px] uppercase tracking-[0.3em] flex items-center gap-3 hover:text-violet-600 transition-all">
           <Filter size={18} />
           Refine Search
         </button>
       </div>
 
-      <div className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden">
+      <div className="nm-luxury rounded-[3.5rem] border border-white overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-left">
             <thead>
-              <tr className="bg-gray-50/50">
-                <th className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Provider Identity</th>
-                <th className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Specialty & License</th>
-                <th className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Contact Axis</th>
-                <th className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Financial Base</th>
+              <tr className="bg-slate-50/50">
+                <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Provider Identity</th>
+                <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Specialty & License</th>
+                <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Contact Axis</th>
+                <th className="px-10 py-8 text-[10px] font-black text-slate-400 uppercase tracking-[0.3em]">Financial Base</th>
                 <th className="px-10 py-8"></th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
+            <tbody className="divide-y divide-slate-50">
               {filteredDoctors.map((doctor) => (
-                <tr key={doctor._id} className="hover:bg-gray-50/80 transition-all group">
+                <tr key={doctor._id} className="hover:bg-slate-50/80 transition-all group">
                   <td className="px-10 py-8">
                     <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-gray-800 flex items-center justify-center text-xs font-black text-blue-400 shadow-xl group-hover:scale-105 transition-transform duration-500">
+                      <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-slate-800 flex items-center justify-center text-xs font-black text-violet-400 shadow-xl group-hover:scale-105 transition-transform duration-500">
                         {doctor.full_name?.split(' ').map((n: any) => n[0]).join('') || 'D'}
                       </div>
                       <div>
-                        <p className="text-base font-black text-zinc-900 group-hover:text-blue-600 transition-colors tracking-tight">{doctor.full_name}</p>
-                        <div className={`mt-1 flex items-center gap-2 px-2 py-0.5 rounded-lg border w-fit ${doctor.is_active ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-gray-100 border-gray-200 text-gray-500'}`}>
-                          <div className={`w-1.5 h-1.5 rounded-full ${doctor.is_active ? 'bg-emerald-600 animate-pulse' : 'bg-gray-400'}`} />
+                        <p className="text-base font-black text-slate-900 group-hover:text-violet-600 transition-colors tracking-tight">{doctor.full_name}</p>
+                        <div className={`mt-1 flex items-center gap-2 px-2 py-0.5 rounded-lg border w-fit ${doctor.is_active ? 'bg-emerald-50 border-emerald-100 text-emerald-600' : 'bg-slate-100 border-slate-200 text-slate-500'}`}>
+                          <div className={`w-1.5 h-1.5 rounded-full ${doctor.is_active ? 'bg-emerald-600 animate-pulse' : 'bg-slate-400'}`} />
                           <span className="text-[8px] font-black uppercase tracking-widest">{doctor.is_active ? 'Active' : 'Inactive'}</span>
                         </div>
                       </div>
                     </div>
                   </td>
                   <td className="px-10 py-8">
-                    <p className="text-sm font-black text-zinc-900 flex items-center gap-2">
-                       <Stethoscope size={14} className="text-blue-400" />
+                    <p className="text-sm font-black text-slate-900 flex items-center gap-2">
+                       <Stethoscope size={14} className="text-violet-400" />
                        {doctor.specialty || 'General Practice'}
                     </p>
-                    <p className="text-[10px] text-gray-400 font-bold tracking-tight mt-1 uppercase italic">Lic: {doctor.license_number || 'N/A'}</p>
+                    <p className="text-[10px] text-slate-400 font-bold tracking-tight mt-1 uppercase italic">Lic: {doctor.license_number || 'N/A'}</p>
                   </td>
                   <td className="px-10 py-8">
-                    <p className="text-sm font-black text-zinc-900 flex items-center gap-2">
-                       <Phone size={14} className="text-blue-400" />
+                    <p className="text-sm font-black text-slate-900 flex items-center gap-2">
+                       <Phone size={14} className="text-violet-400" />
                        {doctor.whatsapp_number}
                     </p>
-                    <p className="text-[10px] text-gray-400 font-bold tracking-tight mt-1 lowercase italic flex items-center gap-2">
-                       <Mail size={12} className="text-gray-400" />
+                    <p className="text-[10px] text-slate-400 font-bold tracking-tight mt-1 lowercase italic flex items-center gap-2">
+                       <Mail size={12} className="text-slate-400" />
                        {doctor.email || 'no-email'}
                     </p>
                   </td>
                   <td className="px-10 py-8">
-                    <span className="text-[10px] font-black px-4 py-2 bg-white rounded-xl border-2 border-gray-100 text-zinc-900 uppercase tracking-widest shadow-sm">
+                    <span className="text-[10px] font-black px-4 py-2 bg-white rounded-xl border-2 border-slate-100 text-slate-900 uppercase tracking-widest shadow-sm">
                       ${doctor.consultation_fee?.toFixed(2) || '0.00'}
                     </span>
                   </td>
                   <td className="px-10 py-8 text-right relative">
                     <button 
                       onClick={() => setActiveMenu(activeMenu === doctor._id ? null : doctor._id)}
-                      className="text-gray-300 hover:text-blue-600 p-3 rounded-2xl hover:bg-white transition-all shadow-none hover:shadow-lg"
+                      className="text-slate-300 hover:text-violet-600 p-3 rounded-2xl nm-button shadow-none"
                     >
                       <MoreVertical size={24} />
                     </button>
                     
                     {activeMenu === doctor._id && (
-                      <div className="absolute right-16 top-1/2 -translate-y-1/2 bg-white border border-gray-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-50 py-3 w-56 animate-in zoom-in-95 duration-300">
+                      <div className="absolute right-16 top-1/2 -translate-y-1/2 bg-white border border-slate-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.1)] z-50 py-3 w-56 animate-in zoom-in-95 duration-300">
                         <button 
                           onClick={() => {
                             setEditingDoctor(doctor);
@@ -197,11 +197,11 @@ export default function Doctors() {
                             setShowModal(true);
                             setActiveMenu(null);
                           }}
-                          className="w-full flex items-center justify-between px-6 py-3 text-sm font-black text-zinc-900 hover:bg-blue-50 hover:text-blue-600 transition-all group/btn"
+                          className="w-full flex items-center justify-between px-6 py-3 text-sm font-black text-slate-900 hover:bg-violet-50 hover:text-violet-600 transition-all group/btn"
                         >
-                          Modify Profile <ArrowUpRight size={16} className="text-gray-300 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
+                          Modify Profile <ArrowUpRight size={16} className="text-slate-300 group-hover/btn:translate-x-0.5 group-hover/btn:-translate-y-0.5 transition-transform" />
                         </button>
-                        <div className="h-[1px] bg-gray-50 my-1 mx-4" />
+                        <div className="h-[1px] bg-slate-50 my-1 mx-4" />
                         <button 
                           onClick={() => { handleDelete(doctor._id); setActiveMenu(null); }}
                           className="w-full flex items-center justify-between px-6 py-3 text-sm font-black text-red-500 hover:bg-red-50 transition-all"
