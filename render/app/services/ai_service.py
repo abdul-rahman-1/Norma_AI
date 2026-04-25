@@ -10,7 +10,7 @@ genai.configure(api_key=settings.gemini_api_key)
 
 class AIService:
     def __init__(self):
-        self.model = genai.GenerativeModel('gemini-1.5-flash')
+        self.model = genai.GenerativeModel('gemini-2.5-flash')
 
     async def process_message(self, phone: str, message: str) -> str:
         try:

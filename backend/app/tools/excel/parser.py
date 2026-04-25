@@ -35,7 +35,7 @@ async def parse_excel_with_ai(file_path: str) -> Dict[str, Any]:
 ...
     """
     
-    model = genai.GenerativeModel('gemini-1.5-flash')
+    model = genai.GenerativeModel('gemini-2.5-flash')
     response = model.generate_content(prompt)
     
     try:

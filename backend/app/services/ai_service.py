@@ -38,7 +38,7 @@ class AIService:
         # Tools registration
         self.tools = [register_new_patient, book_appointment]
         self.model = genai.GenerativeModel(
-            model_name='gemini-1.5-flash',
+            model_name='gemini-2.5-flash',
             tools=self.tools
         )
         self.system_instruction = """
