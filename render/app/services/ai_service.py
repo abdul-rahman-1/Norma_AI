@@ -96,8 +96,9 @@ class AIService:
             cancel_appointment, 
             get_patient_appointments
         ]
+        # Switching to 1.5-flash for better stability/availability
         self.model = genai.GenerativeModel(
-            model_name='gemini-2.0-flash',
+            model_name='gemini-1.5-flash',
             tools=self.tools
         )
         self.system_instruction = """
@@ -148,22 +149,34 @@ class AIService:
             status = "OLD_PATIENT" if patient else "NEW_PATIENT"
             
             # Fetch active appointments
-            apts_cursor = db.appointments.find({"phone": phone_key, "status": {"$in": ["scheduled", "confirmed"]}}).sort("appointment_datetime", 1)
-            appointments = await apts_cursor.to_list(length=5)
+            appointments = []
+            try:
+                apts_cursor = db.appointments.find({"phone": phone_key, "status": {"$in": ["scheduled", "confirmed"]}}).sort("appointment_datetime", 1)
+                appointments = await apts_cursor.to_list(length=5)
+            except Exception as e:
+                logger.warning(f"SENTINEL: Could not fetch appointments: {e}")
             
             # Fetch available doctors
-            docs_cursor = db.doctors.find({"is_active": True})
-            doctors = await docs_cursor.to_list(length=10)
-            doctor_list = "\n".join([f"- {d['full_name']} ({d['specialty']})" for d in doctors])
+            doctor_list = "No doctors currently available."
+            try:
+                docs_cursor = db.doctors.find({"is_active": True})
+                doctors = await docs_cursor.to_list(length=10)
+                if doctors:
+                    doctor_list = "\n".join([f"- {d['full_name']} ({d['specialty']})" for d in doctors])
+            except Exception as e:
+                logger.warning(f"SENTINEL: Could not fetch doctors: {e}")
 
             # 3. CHAT HISTORY
-            history_cursor = db.conversations.find({"phone": phone_key}).sort("timestamp", -1).limit(10)
-            raw_history = await history_cursor.to_list(length=10)
             chat_history = []
-            for h in reversed(raw_history):
-                role = "user" if h['role'] == "user" else "model"
-                if not chat_history or chat_history[-1]["role"] != role:
-                    chat_history.append({"role": role, "parts": [h['text']]})
+            try:
+                history_cursor = db.conversations.find({"phone": phone_key}).sort("timestamp", -1).limit(10)
+                raw_history = await history_cursor.to_list(length=10)
+                for h in reversed(raw_history):
+                    role = "user" if h['role'] == "user" else "model"
+                    if not chat_history or chat_history[-1]["role"] != role:
+                        chat_history.append({"role": role, "parts": [h['text']]})
+            except Exception as e:
+                logger.warning(f"SENTINEL: Could not fetch history: {e}")
 
             # 4. AI EXECUTION
             chat = self.model.start_chat(history=chat_history)
@@ -191,17 +204,21 @@ class AIService:
                         final_reply = follow_up.text
 
             # 6. PERSIST CONVERSATION
-            await db.conversations.insert_many([
-                {"phone": phone_key, "role": "user", "text": message, "timestamp": datetime.utcnow()},
-                {"phone": phone_key, "role": "assistant", "text": final_reply, "timestamp": datetime.utcnow()}
-            ])
+            try:
+                await db.conversations.insert_many([
+                    {"phone": phone_key, "role": "user", "text": message, "timestamp": datetime.utcnow()},
+                    {"phone": phone_key, "role": "assistant", "text": final_reply, "timestamp": datetime.utcnow()}
+                ])
+            except Exception as e:
+                logger.error(f"SENTINEL: Could not persist conversation: {e}")
 
             return final_reply
 
         except Exception as e:
-            logger.error(f"SENTINEL ERROR: {e}")
-            logger.error(traceback.format_exc())
-            return "DEBUG: SENTINEL ERROR ⚠️"
+            err_details = f"{str(e)}\n{traceback.format_exc()}"
+            logger.error(f"SENTINEL ERROR: {err_details}")
+            # Returning more info for debugging
+            return f"DEBUG: SENTINEL ERROR - {str(e)} ⚠️"
 
     async def execute_action(self, name, args, sender_phone, patient):
         db = get_db()
@@ -297,6 +314,6 @@ class AIService:
             return "Action executed."
         except Exception as e:
             logger.error(f"TOOL ERROR: {name} - {e}")
-            return f"Error executing {name}."
+            return f"Error executing {name}: {str(e)}."
 
 ai_service = AIService()
