@@ -10,8 +10,8 @@ from bson import ObjectId
 settings = get_settings()
 genai.configure(api_key=settings.gemini_api_key)
 
-# 1. Standardized Phone Normalization (CRITICAL FIX)
 def normalize_phone(phone: str) -> str:
+    """Standardizes phone numbers to the last 10 digits as per fix.md."""
     return "".join(filter(str.isdigit, phone))[-10:]
 
 # --- CLINICAL TOOLS ---
@@ -35,6 +35,7 @@ class AIService:
             tools=self.tools
         )
         self.system_instruction = """
+        You are the NORMA AI Clinical Sentinel. 
         You must ONLY respond using provided database context.
         If patient exists, NEVER ask registration again.
         If appointments exist, ALWAYS return real data.
@@ -45,64 +46,58 @@ class AIService:
     async def process_message(self, phone_raw: str, message: str) -> str:
         try:
             db = get_db()
+            if db is None: return "DEBUG: Database connection is NULL. 🏥"
+            
             phone_key = normalize_phone(phone_raw)
             
-            # 2. Fetch Truth from DB (Identity Resolution)
+            # 1. Fetch Patient (Using 'phone' key as per fix.md)
             patient = await db.patients.find_one({"phone": phone_key})
+            # Fallback for old schema during transition
+            if not patient:
+                patient = await db.patients.find_one({"phone_number": {"$regex": phone_key}})
             
-            # 3. Fetch Truth from DB (Appointment Consistency)
+            # 2. Fetch Appointments
             apts_cursor = db.appointments.find({"phone": phone_key, "status": "booked"}).sort("date", 1)
             appointments = await apts_cursor.to_list(length=5)
             
-            # 4. Fetch Specialists
+            # 3. Fetch Doctors
             docs_cursor = db.doctors.find({"is_active": True})
             doctors = await docs_cursor.to_list(length=10)
             doctor_list = "\n".join([f"- {d['full_name']} ({d['specialty']})" for d in doctors])
 
-            # 5. Stateful Memory (Last 6 turns)
+            # 4. History
             history_cursor = db.conversations.find({"phone": phone_key}).sort("timestamp", -1).limit(6)
             raw_history = await history_cursor.to_list(length=6)
-            
-            # Enforce role alternation and clean format
             chat_history = []
             for h in reversed(raw_history):
                 role = "user" if h['role'] == "user" else "model"
                 if not chat_history or chat_history[-1]["role"] != role:
                     chat_history.append({"role": role, "parts": [h['text']]})
 
-            # 6. Strict Prompt Construction (fix.md requirement #8)
+            # 5. AI Execution
+            chat = self.model.start_chat(history=chat_history)
             prompt = f"""
             PHONE: {phone_key}
-
-            PATIENT:
-            {json.dumps(patient, default=str) if patient else "null"}
-
-            APPOINTMENTS:
-            {json.dumps(appointments, default=str)}
-
-            DOCTORS:
-            {doctor_list}
-
-            RECENT_MESSAGES:
-            {json.dumps([{"role": h['role'], "text": h['text']} for h in reversed(raw_history)], default=str)}
-
-            USER:
-            {message}
+            PATIENT: {json.dumps(patient, default=str) if patient else "null"}
+            APPOINTMENTS: {json.dumps(appointments, default=str)}
+            DOCTORS: {doctor_list}
+            RECENT_MESSAGES: {json.dumps([{"role": h['role'], "text": h['text']} for h in reversed(raw_history)], default=str)}
+            USER: {message}
             """
-
-            chat = self.model.start_chat(history=chat_history)
+            
             response = await chat.send_message_async(prompt)
             
-            # 7. Execute Tools (Write Persistence)
+            # 6. Tool Handling
             final_reply = response.text
             if response.candidates and response.candidates[0].content.parts:
                 for part in response.candidates[0].content.parts:
                     if fn := part.function_call:
-                        result = await self.execute_clinical_action(fn.name, fn.args, phone_key, patient)
+                        print(f"SENTINEL EXECUTE: {fn.name}")
+                        result = await self.execute_action(fn.name, fn.args, phone_key, patient)
                         follow_up = await chat.send_message_async(f"DATABASE_RESULT: {result}")
                         final_reply = follow_up.text
 
-            # 8. Persistent Conversation Logic (fix.md requirement #3)
+            # 7. Persistent Log
             await db.conversations.insert_many([
                 {"phone": phone_key, "role": "user", "text": message, "timestamp": datetime.utcnow()},
                 {"phone": phone_key, "role": "assistant", "text": final_reply, "timestamp": datetime.utcnow()}
@@ -111,44 +106,39 @@ class AIService:
             return final_reply
 
         except Exception as e:
-            print(f"SENTINEL CRITICAL: {traceback.format_exc()}")
-            return "Clinical service temporarily recalibrating. 🏥"
+            err_msg = f"SENTINEL ERROR: {str(e)}"
+            print(f"CRITICAL: {traceback.format_exc()}")
+            return f"DEBUG: {err_msg} ⚠️"
 
-    async def execute_clinical_action(self, name, args, phone_key, patient):
+    async def execute_action(self, name, args, phone_key, patient):
         db = get_db()
         try:
-            if name == "register_new_patient":
+            if name == "get_patient_appointments":
+                apts = await db.appointments.find({"phone": phone_key, "status": "booked"}).to_list(length=5)
+                if not apts: return "No active appointments found."
+                return "\n".join([f"- {a['type']} with {a.get('doctor_name', 'Specialist')} on {a['date']} at {a['time']}" for a in apts])
+            
+            elif name == "register_new_patient":
                 await db.patients.insert_one({
-                    "patient_uuid": str(uuid.uuid4()),
-                    "full_name": args['full_name'],
-                    "phone": phone_key,
-                    "date_of_birth": args['dob'],
-                    "gender": args['gender'],
-                    "is_active": True,
-                    "created_at": datetime.utcnow()
+                    "patient_uuid": str(uuid.uuid4()), "full_name": args['full_name'], 
+                    "phone": phone_key, "date_of_birth": args['dob'], "gender": args['gender'],
+                    "is_active": True, "created_at": datetime.utcnow()
                 })
                 return "Registration Successful."
-
+            
             elif name == "book_appointment":
                 doc = await db.doctors.find_one({"full_name": {"$regex": args['doctor_name'], "$options": "i"}})
                 if not doc: return "Specialist not found."
-                
-                # High-Fidelity Schema (fix.md requirement #5)
                 await db.appointments.insert_one({
                     "patient_id": patient["_id"] if patient else None,
-                    "phone": phone_key,
-                    "doctor_id": doc["_id"],
-                    "doctor_name": doc["full_name"],
-                    "specialization": doc["specialty"],
-                    "date": args['date'],
-                    "time": args['time'],
-                    "status": "booked",
-                    "created_at": datetime.utcnow()
+                    "phone": phone_key, "doctor_id": doc["_id"], "doctor_name": doc["full_name"],
+                    "specialization": doc["specialty"], "date": args['date'], "time": args['time'],
+                    "status": "booked", "created_at": datetime.utcnow()
                 })
                 return f"Confirmed: {args['date']} at {args['time']}."
-
+            
             return "Action executed."
         except Exception as e:
-            return f"Database error: {str(e)}"
+            return f"Tool Error: {str(e)}"
 
 ai_service = AIService()

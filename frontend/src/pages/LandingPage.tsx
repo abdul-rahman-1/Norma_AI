@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, Shield, Zap, MessageSquare, ChevronRight, Bot, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
-<<<<<<< HEAD
+import { motion } from 'framer-motion';
 
 const ScrambleText = ({ text }: { text: string }) => {
   const [display, setDisplay] = useState('');
@@ -24,168 +24,175 @@ const ScrambleText = ({ text }: { text: string }) => {
 
   return <span>{display}</span>;
 };
-=======
-import { motion } from 'framer-motion';
->>>>>>> c5ff22881aaa45231237457a151f711c497b142d
 
 export default function LandingPage() {
   const navigate = useNavigate();
 
   return (
-    <div className="min-h-screen bg-white text-zinc-900 overflow-x-hidden selection:bg-purple-100 selection:text-purple-900">
+    <div className="min-h-screen bg-[#0b1326] text-[#dae2fd] overflow-x-hidden selection:bg-[#44ddc1]/20 selection:text-[#44ddc1] font-premium">
       {/* Navigation */}
-      <nav className="fixed top-0 left-0 w-full p-8 flex justify-between items-center z-[100] bg-white/80 backdrop-blur-xl border-b border-gray-100">
-        <div className="flex items-center gap-3">
-          <div className="bg-purple-600 text-white p-2 rounded-xl shadow-lg shadow-purple-500/20">
+      <nav className="fixed top-0 left-0 w-full p-8 flex justify-between items-center z-[100] bg-[#0b1326]/80 backdrop-blur-xl border-b border-white/5">
+        <div className="flex items-center gap-4">
+          <div className="bg-[#44ddc1] text-[#00382f] p-2.5 rounded-xl shadow-2xl shadow-[#44ddc1]/20">
             <Activity size={24} />
           </div>
           <span className="text-2xl font-black tracking-tighter uppercase italic">Norma AI</span>
         </div>
-        <div className="hidden md:flex items-center gap-10">
+        <div className="hidden md:flex items-center gap-12">
           {['Network', 'Sentinel', 'Infrastructure', 'Security'].map(item => (
-            <a key={item} href="#" className="text-[10px] font-black uppercase tracking-[0.3em] text-gray-400 hover:text-purple-600 transition-colors">{item}</a>
+            <a key={item} href="#" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#85948f] hover:text-[#44ddc1] transition-all">{item}</a>
           ))}
         </div>
         <button 
           onClick={() => navigate('/login')}
-          className="bg-zinc-900 text-white px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-purple-600 transition-all shadow-xl shadow-zinc-900/10 flex items-center gap-3"
+          className="bg-[#131b2e] text-[#dae2fd] border border-white/10 px-8 py-3 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] hover:bg-[#171f33] hover:border-[#44ddc1]/30 transition-all shadow-2xl flex items-center gap-3"
         >
-          Initialize Command <ArrowRight size={14} />
+          Initialize Command <ArrowRight size={14} className="text-[#44ddc1]" />
         </button>
       </nav>
 
       {/* Hero Section */}
-      <header className="relative pt-40 pb-32 px-10 flex flex-col items-center justify-center overflow-hidden">
-        {/* Decorative elements */}
-        <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[1000px] h-[600px] bg-purple-50 rounded-full blur-[120px] -z-10 opacity-60" />
+      <header className="relative pt-56 pb-40 px-10 flex flex-col items-center justify-center overflow-hidden">
+        {/* Deep Space Decorative Glows */}
+        <div className="absolute top-40 left-1/2 -translate-x-1/2 w-[1200px] h-[700px] bg-[#44ddc1]/5 rounded-full blur-[140px] -z-10" />
+        <div className="absolute bottom-0 right-0 w-[600px] h-[600px] bg-[#7c3aed]/5 rounded-full blur-[120px] -z-10" />
         
-        <div className="max-w-5xl mx-auto text-center space-y-10 relative">
-          <div className="inline-flex items-center gap-2 px-4 py-2 rounded-2xl bg-purple-50 border border-purple-100 mb-4">
-            <Sparkles size={14} className="text-purple-600" />
-            <span className="text-[10px] font-black tracking-[0.3em] text-purple-600 uppercase">Next-Gen Clinical Protocol v2.5</span>
+        <motion.div 
+          initial={{ y: 30, opacity: 0 }}
+          animate={{ y: 0, opacity: 1 }}
+          transition={{ duration: 0.8 }}
+          className="max-w-6xl mx-auto text-center space-y-12 relative"
+        >
+          <div className="inline-flex items-center gap-3 px-5 py-2 rounded-2xl bg-[#44ddc1]/5 border border-[#44ddc1]/20 mb-4 shadow-xl">
+            <Sparkles size={16} className="text-[#44ddc1]" />
+            <span className="text-[10px] font-black tracking-[0.4em] text-[#44ddc1] uppercase leading-none">Autonomous Clinical Sentinel v2.6.0</span>
           </div>
           
-          <h1 className="text-7xl md:text-[120px] font-black tracking-tighter leading-[0.85] text-zinc-900 uppercase">
+          <h1 className="text-8xl md:text-[150px] font-black tracking-tighter leading-[0.8] text-[#dae2fd] uppercase italic">
             Clinical<br />
-            <span className="text-purple-600 italic">Sentinel</span>
+            <span className="text-[#44ddc1]">Sentinel</span>
           </h1>
           
-          <p className="text-xl md:text-2xl text-gray-500 max-w-3xl mx-auto font-medium leading-relaxed tracking-tight">
-            The world's most advanced AI clinical orchestration system. 
-            Automate patient flow, synchronize diagnostic data, and optimize care with zero friction.
+          <p className="text-xl md:text-2xl text-[#85948f] max-w-3xl mx-auto font-medium leading-relaxed tracking-tight opacity-80">
+            High-fidelity clinical orchestration system. Automate patient flow, 
+            synchronize diagnostic telemetry, and optimize practice efficiency via neural mesh.
           </p>
           
-          <div className="flex flex-col sm:flex-row items-center justify-center gap-6 pt-12">
+          <div className="flex flex-col sm:flex-row items-center justify-center gap-8 pt-10">
             <button 
               onClick={() => navigate('/login')}
-              className="group bg-zinc-900 text-white px-12 py-6 rounded-[2rem] font-black tracking-widest text-xs shadow-2xl shadow-zinc-900/20 hover:bg-purple-600 hover:-translate-y-1 transition-all flex items-center gap-4"
+              className="btn-clinical group flex items-center gap-5"
             >
               ESTABLISH UPLINK <ChevronRight size={20} className="group-hover:translate-x-1 transition-transform" />
             </button>
-            <button className="px-12 py-6 rounded-[2rem] border border-gray-200 font-black tracking-widest text-xs hover:bg-gray-50 transition-all flex items-center gap-3">
-              VIEW ARCHITECTURE <div className="w-2 h-2 rounded-full bg-purple-600" />
+            <button className="px-12 py-6 rounded-[2rem] border-2 border-white/5 bg-[#131b2e]/50 text-[#85948f] font-black tracking-[0.3em] text-[10px] hover:bg-[#131b2e] hover:text-[#dae2fd] hover:border-[#44ddc1]/20 transition-all flex items-center gap-4 shadow-2xl">
+              VIEW ARCHITECTURE <div className="w-2 h-2 rounded-full bg-[#44ddc1] shadow-[0_0_8px_rgba(68,221,193,0.8)]" />
             </button>
           </div>
-        </div>
+        </motion.div>
       </header>
 
-      {/* Feature Section */}
-      <section className="py-40 px-10 bg-[#09090b] text-white rounded-[4rem] mx-6">
+      {/* Feature Grid */}
+      <section className="py-48 px-10 relative">
         <div className="max-w-7xl mx-auto">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
             {[
-              { icon: Zap, title: "Neural Ingestion", desc: "Process complex clinical datasets and medical histories in milliseconds with zero error rate." },
-              { icon: MessageSquare, title: "Omnichannel AI", desc: "Automate patient interaction via secure WhatsApp and Web nodes with Gemini v2.5." },
-              { icon: Shield, title: "Zero-Trust Security", desc: "End-to-end encrypted clinical records with multi-layered role-based authorization." }
+              { icon: Zap, title: "Neural Ingestion", desc: "Process complex clinical manifests and medical histories in milliseconds with zero error rate." },
+              { icon: MessageSquare, title: "Clinical WhatsApp", desc: "Automate patient interaction via secure neural nodes with multi-turn memory integration." },
+              { icon: Shield, title: "Identity Vault", desc: "Global patient identification with multi-layered role-based telemetry encryption." }
             ].map((f, i) => (
-              <div key={i} className="group space-y-8 p-10 rounded-[3rem] border border-white/5 bg-white/5 hover:bg-white/10 transition-all duration-500">
-                <div className="w-16 h-16 rounded-2xl bg-purple-600 flex items-center justify-center text-white shadow-xl shadow-purple-500/20 group-hover:scale-110 group-hover:rotate-3 transition-all">
+              <motion.div 
+                key={i} 
+                whileHover={{ y: -10 }}
+                className="group space-y-10 p-12 rounded-[3.5rem] border border-white/5 bg-[#131b2e]/50 glass-surface hover:border-[#44ddc1]/20 transition-all duration-700 shadow-2xl"
+              >
+                <div className="w-16 h-16 rounded-2xl bg-[#44ddc1] flex items-center justify-center text-[#00382f] shadow-2xl shadow-[#44ddc1]/20 group-hover:scale-110 transition-transform">
                   <f.icon size={32} />
                 </div>
-                <h3 className="text-3xl font-black tracking-tight">{f.title}</h3>
-                <p className="text-gray-400 font-medium leading-relaxed text-lg">{f.desc}</p>
-                <div className="pt-4 flex items-center gap-2 text-purple-400 text-[10px] font-black uppercase tracking-[0.2em]">
-                   <span>Read Documentation</span>
+                <h3 className="text-3xl font-black tracking-tighter text-[#dae2fd] uppercase italic">{f.title}</h3>
+                <p className="text-[#85948f] font-medium leading-relaxed text-lg opacity-80">{f.desc}</p>
+                <div className="pt-4 flex items-center gap-3 text-[#44ddc1] text-[10px] font-black uppercase tracking-[0.3em] opacity-40 group-hover:opacity-100 transition-opacity">
+                   <span>Secure Protocol</span>
                    <ArrowRight size={14} />
                 </div>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Infrastructure Section */}
-      <section className="py-40 px-10 bg-white">
-        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-24 items-center">
-          <div className="space-y-10">
-            <h2 className="text-5xl md:text-7xl font-black tracking-tighter leading-none text-zinc-900 uppercase">
-              Robust<br />
-              <span className="text-purple-600">Infrastructure</span>
-            </h2>
-            <p className="text-xl text-gray-500 font-medium leading-relaxed">
-              Norma AI is built on a distributed clinical network architecture designed for 99.99% uptime and sub-10ms latency.
-            </p>
-            <div className="space-y-6">
+      {/* Infrastructure Node Section */}
+      <section className="py-48 px-10 bg-[#060e20]/50">
+        <div className="max-w-7xl mx-auto grid grid-cols-1 lg:grid-cols-2 gap-32 items-center">
+          <div className="space-y-12">
+            <div className="space-y-4">
+              <h2 className="text-6xl md:text-8xl font-black tracking-tighter leading-[0.85] text-[#dae2fd] uppercase italic">
+                Robust<br />
+                <span className="text-[#44ddc1]">Mesh</span>
+              </h2>
+              <p className="text-xl text-[#85948f] font-medium leading-relaxed max-w-xl">
+                Distributed clinical network architecture designed for 99.99% uptime and sub-10ms global synchronization.
+              </p>
+            </div>
+            <div className="space-y-8">
               {[
-                "Distributed Database Synchronization",
-                "Real-time AI Sentinel Monitoring",
-                "Automated Patient Registry Ingestion",
-                "Scalable Multi-Node Architecture"
+                "Distributed Database Multi-Node Sync",
+                "Real-time AI Clinical Telemetry",
+                "Automated Registry Identity Provisioning",
+                "High-Availability Cloud Edge Orchestration"
               ].map((item, i) => (
-                <div key={i} className="flex items-center gap-4">
-                  <div className="w-6 h-6 rounded-full bg-purple-100 flex items-center justify-center text-purple-600">
-                    <CheckCircle2 size={16} />
+                <motion.div key={i} whileHover={{ x: 10 }} className="flex items-center gap-6 group">
+                  <div className="w-8 h-8 rounded-xl bg-[#44ddc1]/10 flex items-center justify-center text-[#44ddc1] border border-[#44ddc1]/20 group-hover:bg-[#44ddc1] group-hover:text-[#00382f] transition-all">
+                    <CheckCircle2 size={18} />
                   </div>
-                  <span className="font-bold text-zinc-900 tracking-tight">{item}</span>
-                </div>
+                  <span className="font-black text-lg text-[#dae2fd] tracking-tight uppercase italic">{item}</span>
+                </motion.div>
               ))}
             </div>
           </div>
-          <div className="relative">
-            <div className="absolute inset-0 bg-purple-100 rounded-[3rem] rotate-3 -z-10" />
-            <div className="bg-zinc-900 p-10 rounded-[3rem] shadow-2xl border border-gray-800">
-              <div className="flex items-center justify-between mb-8">
+          
+          <div className="relative group">
+            <div className="absolute inset-0 bg-[#44ddc1]/10 rounded-[4rem] rotate-3 -z-10 blur-2xl opacity-0 group-hover:opacity-100 transition-all duration-1000" />
+            <div className="bg-[#131b2e] p-12 rounded-[4rem] shadow-2xl border border-white/5 relative overflow-hidden">
+              <div className="flex items-center justify-between mb-12">
                 <div className="flex gap-2">
-                  <div className="w-3 h-3 rounded-full bg-red-500" />
-                  <div className="w-3 h-3 rounded-full bg-amber-500" />
-                  <div className="w-3 h-3 rounded-full bg-green-500" />
+                  <div className="w-3 h-3 rounded-full bg-red-500/50" />
+                  <div className="w-3 h-3 rounded-full bg-amber-500/50" />
+                  <div className="w-3 h-3 rounded-full bg-emerald-500/50 shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
                 </div>
-                <div className="text-[10px] font-black text-gray-500 uppercase tracking-widest">Sentinel_Log.sys</div>
+                <div className="text-[10px] font-black text-[#3c4a46] uppercase tracking-[0.5em] italic">Mesh_Terminal_v2.6.log</div>
               </div>
-              <div className="space-y-4 font-mono text-sm">
-                <p className="text-purple-400 font-bold underline mb-4">Initialize system_uplink...</p>
-                <p className="text-gray-400"><span className="text-green-500">[OK]</span> DB_MESH CONNECTED</p>
-                <p className="text-gray-400"><span className="text-green-500">[OK]</span> AI_SENTINEL_NODE ACTIVE</p>
-                <p className="text-gray-400"><span className="text-green-500">[OK]</span> CRYPTO_MODULE ENABLED</p>
-                <p className="text-gray-400 animate-pulse"><span className="text-purple-500">[&gt;]</span> SYNCING CLINICAL TELEMETRY...</p>
+              <div className="space-y-6 font-mono text-sm leading-relaxed">
+                <p className="text-[#44ddc1] font-bold underline mb-6 tracking-widest"><ScrambleText text="INITIALIZE_SENTINEL_UPLINK..." /></p>
+                <p className="text-[#85948f]/60"><span className="text-emerald-500">[OK]</span> CLINICAL_DB_MESH CONNECTED</p>
+                <p className="text-[#85948f]/60"><span className="text-emerald-500">[OK]</span> NEURAL_SENTINEL_NODE ACTIVE</p>
+                <p className="text-[#85948f]/60"><span className="text-emerald-500">[OK]</span> WHATSAPP_BRIDGE SECURED</p>
+                <p className="text-[#dae2fd] animate-pulse"><span className="text-[#44ddc1]">[&gt;]</span> SYNCING REGISTRY TELEMETRY...</p>
               </div>
             </div>
           </div>
         </div>
       </section>
-<<<<<<< HEAD
 
       {/* Footer */}
-      <footer className="py-20 px-10 border-t border-gray-100 bg-gray-50/50">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="flex items-center gap-3">
-            <div className="bg-zinc-900 text-white p-1.5 rounded-lg">
-              <Activity size={20} />
+      <footer className="py-24 px-10 border-t border-white/5 bg-[#0b1326]">
+        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-12">
+          <div className="flex items-center gap-4">
+            <div className="bg-[#131b2e] text-[#44ddc1] p-2 rounded-lg border border-white/5">
+              <Activity size={24} />
             </div>
-            <span className="text-xl font-black tracking-tighter uppercase italic">Norma AI</span>
+            <span className="text-2xl font-black tracking-tighter uppercase italic">Norma AI</span>
           </div>
-          <p className="text-[10px] font-black text-gray-400 tracking-[0.3em] uppercase">
-            &copy; 2026 Norma AI Clinical Systems • Secure Medical Network
+          <p className="text-[11px] font-black text-[#3c4a46] tracking-[0.4em] uppercase text-center">
+            &copy; 2026 NORMA AI CLINICAL SYSTEMS • HIGH-FIDELITY MEDICAL ORCHESTRATION
           </p>
-          <div className="flex gap-8">
-            {['Privacy', 'Security', 'Uptime'].map(item => (
-              <a key={item} href="#" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-purple-600 transition-all">{item}</a>
+          <div className="flex gap-10">
+            {['Privacy', 'Network', 'Uptime'].map(item => (
+              <a key={item} href="#" className="text-[10px] font-black uppercase tracking-[0.3em] text-[#3c4a46] hover:text-[#44ddc1] transition-all">{item}</a>
             ))}
           </div>
         </div>
       </footer>
-=======
->>>>>>> c5ff22881aaa45231237457a151f711c497b142d
     </div>
   );
 }
