@@ -14,17 +14,10 @@ from typing import Optional, List
 settings = get_settings()
 genai.configure(api_key=settings.gemini_api_key)
 
-def print(msg):
-    print(msg)
-    sys.stdout.flush()
-
 def normalize_phone(phone: str) -> str:
     """Standardizes phone numbers to E.164 format or at least a consistent numeric string."""
     digits = "".join(filter(str.isdigit, phone))
     if not phone.startswith('+') and len(digits) == 10:
-        # We still need a way to handle local numbers if the country code is missing, 
-        # but let's make it less regional-specific or at least better documented.
-        # For now, let's just ensure it's a full string of digits.
         pass
     return f"+{digits}" if not phone.startswith('+') else phone
 
@@ -76,12 +69,6 @@ class AIService:
         - If 'OLD_PATIENT': Greet with "Welcome back, [Name]! How can I help you today?"
         - If 'NEW_PATIENT': Greet with "Welcome to Norma AI! I'm here to help you register and book an appointment." 
           Then ask for all details sequentially: Full Name, DOB (YYYY-MM-DD), Gender.
-        
-        TOOLS USAGE:
-        - Use 'check_available_slots' to see when a doctor is free.
-        - Use 'book_appointment' ONLY after confirming the doctor, date, and time with the patient.
-        - Use 'register_new_patient' for new users.
-        - Use 'get_patient_appointments' to show their upcoming visits.
         """
 
     async def process_message(self, phone_raw: str, message: str) -> str:
@@ -95,10 +82,9 @@ class AIService:
             phone_digits = "".join(filter(str.isdigit, normalized_phone))
             phone_suffix_10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
             
-            print(f"AI_PROCESS: RawPhone={phone_raw} Normalized={normalized_phone} Suffix={phone_suffix_10}")
+            logger.info(f"AI_PROCESS: RawPhone={phone_raw} Normalized={normalized_phone} Suffix={phone_suffix_10}")
             
             # 1. FETCH PATIENT - Recognition fix using suffix-based regex
-            # This handles numbers stored with spaces, country codes, or different formats
             patient = await db.patients.find_one({
                 "$or": [
                     {"phone_number": normalized_phone},
@@ -107,8 +93,13 @@ class AIService:
             })
             
             status = "OLD_PATIENT" if patient else "NEW_PATIENT"
-            print(f"AI_STATUS: {status} (Found={bool(patient)})")
             
+            # Decision Logging for User
+            if patient:
+                logger.info(f"[DECISION] OLD PATIENT RECOGNIZED: {patient.get('full_name')} (ID: {patient.get('_id')})")
+            else:
+                logger.info(f"[DECISION] NEW PATIENT DETECTED: No record found for suffix {phone_suffix_10}")
+
             # 2. FETCH CONTEXT DATA
             appointments = []
             if patient:
@@ -146,6 +137,7 @@ class AIService:
             if response.candidates and response.candidates[0].content.parts:
                 for part in response.candidates[0].content.parts:
                     if fn := part.function_call:
+                        logger.info(f"AI_TOOL_CALL: {fn.name}")
                         result = await self.execute_action(fn.name, fn.args, normalized_phone, patient)
                         follow_up = await chat.send_message_async(f"DATABASE_RESULT: {json.dumps(result)}")
                         final_reply = follow_up.text
@@ -159,21 +151,20 @@ class AIService:
             return final_reply
 
         except Exception as e:
-            print(f"AI_CRITICAL_ERROR: {traceback.format_exc()}")
+            logger.error(f"AI_CRITICAL_ERROR: {traceback.format_exc()}")
             return "I encountered an error while processing your request. Please try again."
 
     async def execute_action(self, name, args, sender_phone, patient):
         db = get_db()
-        print(f"TOOL_EXEC: {name} with args {args}")
+        logger.info(f"TOOL_EXEC: {name} with args {args}")
         try:
             if name == "register_new_patient":
-                # Handle Date conversion
                 dob_val = args['date_of_birth']
                 try:
                     dob_dt = datetime.strptime(dob_val, "%Y-%m-%d")
                 except:
                     try: dob_dt = datetime.strptime(dob_val, "%d-%m-%Y")
-                    except: dob_dt = dob_val # Fallback to string if parsing fails
+                    except: dob_dt = dob_val
                 
                 new_patient = {
                     "patient_uuid": str(uuid.uuid4()),
@@ -239,10 +230,7 @@ class AIService:
             
             return {"status": "error", "message": "Unknown tool."}
         except Exception as e:
-            print(f"TOOL_ERROR: {e}")
+            logger.error(f"TOOL_ERROR: {e}")
             return {"status": "error", "message": str(e)}
-        except Exception as e:
-            print(f"TOOL_ERROR: {e}")
-            return f"Error executing {name}."
 
 ai_service = AIService()

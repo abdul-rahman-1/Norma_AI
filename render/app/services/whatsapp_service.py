@@ -1,14 +1,11 @@
 from twilio.rest import Client
 from app.config import get_settings
+from app.logger import logger
 from datetime import datetime
 import logging
 import sys
 
 settings = get_settings()
-
-def print(msg):
-    print(msg)
-    sys.stdout.flush()
 
 class WhatsAppService:
     def __init__(self):
@@ -29,13 +26,13 @@ class WhatsAppService:
 
             to_whatsapp = f"whatsapp:{clean_phone}"
             
-            # Log outgoing message
+            # Log outgoing message per @fix.md
             timestamp = datetime.utcnow().isoformat() + "Z"
-            print("\n[OUTGOING MESSAGE]")
-            print(f"TIME: {timestamp}")
-            print(f"TO: {to_whatsapp}")
-            print(f"FROM: {self.from_number}")
-            print(f"RESPONSE: \"{safe_body}\"")
+            logger.info("\n[OUTGOING MESSAGE]")
+            logger.info(f"TIME: {timestamp}")
+            logger.info(f"TO: {to_whatsapp}")
+            logger.info(f"FROM: {self.from_number}")
+            logger.info(f"RESPONSE: \"{safe_body}\"")
             
             message = self.client.messages.create(
                 body=safe_body, 
@@ -45,10 +42,10 @@ class WhatsAppService:
             return message.sid
         except Exception as e:
             timestamp = datetime.utcnow().isoformat() + "Z"
-            print(f"\n[ERROR - OUTGOING]")
-            print(f"TIME: {timestamp}")
-            print(f"TO: {to_phone if 'to_phone' in locals() else 'Unknown'}")
-            print(f"ERROR: {e}")
+            logger.error(f"\n[ERROR - OUTGOING]")
+            logger.error(f"TIME: {timestamp}")
+            logger.error(f"TO: {to_phone}")
+            logger.error(f"ERROR: {e}")
             return None
 
 whatsapp_service = WhatsAppService()

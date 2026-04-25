@@ -9,10 +9,6 @@ import sys
 
 router = APIRouter()
 
-def print(msg):
-    print(msg)
-    sys.stdout.flush()
-
 async def process_and_audit(phone: str, message: str):
     """Handles AI logic, replies to patient, and logs the entire exchange."""
     db = get_db()
@@ -42,43 +38,45 @@ async def process_and_audit(phone: str, message: str):
             })
 
     except Exception as e:
-        timestamp = datetime.utcnow().isoformat() + "Z"
-        print(f"\n[ERROR]")
-        print(f"TIME: {timestamp}")
-        print(f"FROM: {phone}")
-        print(f"ERROR: {traceback.format_exc()}")
+        logger.error(f"[PROCESS_AND_AUDIT ERROR] Phone: {phone} | Error: {traceback.format_exc()}")
 
 @router.post("/webhook")
 async def whatsapp_webhook(
     background_tasks: BackgroundTasks,
-    Body: str = Form(...),
-    From: str = Form(...),
+    Body: str = Form(None),
+    From: str = Form(None),
     To: str = Form(None),
+    MessageSid: str = Form(None),
     SmsSid: str = Form(None)
 ):
     """Gateway entry point. Responds to Twilio instantly and audits in background."""
     try:
         timestamp = datetime.utcnow().isoformat() + "Z"
-        print("\n[INCOMING MESSAGE]")
-        print(f"TIME: {timestamp}")
-        print(f"FROM: {From}")
-        print(f"TO: {To}")
-        print(f"MESSAGE: \"{Body}\"")
-        print(f"SID: {SmsSid}")
+        sid = MessageSid or SmsSid or "Unknown"
         
+        # Structured logging per @fix.md
+        logger.info("\n[INCOMING MESSAGE]")
+        logger.info(f"TIME: {timestamp}")
+        logger.info(f"FROM: {From}")
+        logger.info(f"TO: {To}")
+        logger.info(f"MESSAGE: \"{Body}\"")
+        logger.info(f"SID: {sid}")
+        
+        if not From or not Body:
+            logger.warning("GATEWAY: Received partial Twilio request (missing From or Body)")
+            return Response(content="", status_code=200)
+
         sender_phone = From.replace('whatsapp:', '').strip()
         
         # Dispatch to background audit stream
         background_tasks.add_task(process_and_audit, sender_phone, Body)
         
-        # Return empty response to Twilio to prevent automatic "OK" replies
+        # Return empty response to Twilio
         return Response(content="", media_type="text/xml", status_code=200)
         
     except Exception as e:
         timestamp = datetime.utcnow().isoformat() + "Z"
-        print(f"\n[ERROR]")
-        print(f"TIME: {timestamp}")
-        print(f"FROM: {From if 'From' in locals() else 'Unknown'}")
-        print(f"MESSAGE: {Body if 'Body' in locals() else 'Unknown'}")
-        print(f"ERROR: {traceback.format_exc()}")
+        logger.error(f"\n[ERROR]")
+        logger.error(f"TIME: {timestamp}")
+        logger.error(f"ERROR: {traceback.format_exc()}")
         return Response(content="", status_code=200)
