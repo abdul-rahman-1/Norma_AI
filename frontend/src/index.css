@@ -1,76 +1,128 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200&display=swap');
 @import "tailwindcss";
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Outfit:wght@300;400;500;600;700;800;900&display=swap');
 
 :root {
-  --bg-soft: #f0f2f5;
-  --purple-primary: #7c3aed;
-  --purple-soft: #ede9fe;
-  --text-main: #1e293b;
-  --text-light: #64748b;
+  --sota-indigo: #0f172a;
+  --sota-purple: #7c3aed;
+  --sota-lavender: #a78bfa;
+  --sota-cyan: #22d3ee;
+  --sota-white: #ffffff;
+  --sota-bg: #f8fafc;
+}
+
+html {
+  scroll-behavior: smooth;
+  font-size: 15px; /* Slightly reduced base font size for "Pro" feel */
 }
 
 body {
   margin: 0;
-  font-family: 'Inter', sans-serif;
-  background-color: var(--bg-soft);
-  color: var(--text-main);
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  background-color: var(--sota-bg);
+  color: var(--sota-indigo);
   -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5, h6, .font-premium {
+h1, h2, h3, h4, h5, h6, .font-display {
   font-family: 'Outfit', sans-serif;
+  letter-spacing: -0.03em;
 }
 
-/* Neuromorphism Utilities */
-.nm-flat {
-  background: #f0f2f5;
-  box-shadow: 20px 20px 60px #ccd0d5, -20px -20px 60px #ffffff;
-}
-
-.nm-flat-sm {
-  background: #f0f2f5;
-  box-shadow: 6px 6px 12px #ccd0d5, -6px -6px 12px #ffffff;
-}
-
-.nm-inset {
-  background: #f0f2f5;
-  box-shadow: inset 6px 6px 12px #ccd0d5, inset -6px -6px 12px #ffffff;
-}
-
-.nm-button {
-  background: #f0f2f5;
-  box-shadow: 6px 6px 12px #ccd0d5, -6px -6px 12px #ffffff;
-  transition: all 0.2s ease;
-}
-
-.nm-button:active {
-  box-shadow: inset 4px 4px 8px #ccd0d5, inset -4px -4px 8px #ffffff;
-  transform: scale(0.98);
-}
-
-/* Glassmorphism Utilities */
-.glass {
+/* Ethereal Surface - Thinner for Compact UI */
+.ethereal-surface {
   background: rgba(255, 255, 255, 0.7);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.3);
+  backdrop-filter: blur(30px);
+  -webkit-backdrop-filter: blur(30px);
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow: 
+    0 4px 15px -1px rgba(0, 0, 0, 0.01),
+    0 6px 20px -5px rgba(0, 0, 0, 0.02);
 }
 
-.glass-dark {
-  background: rgba(15, 23, 42, 0.8);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+.ethereal-border {
+  position: relative;
+}
+
+.ethereal-border::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  padding: 1.2px;
+  background: linear-gradient(135deg, rgba(255,255,255,1), rgba(255,255,255,0.2), rgba(124,58,237,0.1));
+  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+}
+
+/* Bento Grid Utilities - Compact Version */
+.bento-card {
+  background: #ffffff;
+  border-radius: 2rem; /* Reduced from 2.5rem */
+  padding: 1.75rem; /* Reduced from 2rem */
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 4px 15px -1px rgba(0, 0, 0, 0.03);
+  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.bento-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 15px 35px -12px rgba(124, 58, 237, 0.08);
+}
+
+/* High-Contrast Interactive Elements - Compact */
+.btn-sota {
+  @apply bg-zinc-900 text-white px-8 py-4 rounded-2xl font-bold text-[10px] uppercase tracking-[0.3em] transition-all hover:bg-purple-600 hover:shadow-xl hover:shadow-purple-500/15 active:scale-95;
+}
+
+.input-sota {
+  @apply bg-white/50 border border-gray-100 px-5 py-3 rounded-xl outline-none focus:bg-white focus:ring-4 focus:ring-purple-500/5 focus:border-purple-200 transition-all font-medium text-sm;
 }
 
 /* Premium Scrollbar */
-.scrollbar-thin::-webkit-scrollbar {
-  width: 5px;
-}
-.scrollbar-thin::-webkit-scrollbar-track {
-  background: transparent;
-}
+.scrollbar-thin::-webkit-scrollbar { width: 4px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 20px;
+  background: rgba(15, 23, 42, 0.03);
+  border-radius: 100px;
+}
+.scrollbar-thin:hover::-webkit-scrollbar-thumb { background: rgba(124, 58, 237, 0.2); }
+
+/* Custom Utilities */
+.nm-luxury {
+  background: #ffffff;
+  box-shadow: 0 4px 15px -1px rgba(0, 0, 0, 0.03), 0 2px 8px -1px rgba(0, 0, 0, 0.01);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+}
+
+.nm-button-luxury {
+  background: #ffffff;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+  border: 1px solid #f1f5f9;
+  transition: all 0.3s ease;
+}
+
+.nm-button-luxury:hover {
+  background: #f8fafc;
+  transform: translateY(-1px);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.04);
+}
+
+.glass-luxury {
+  background: rgba(255, 255, 255, 0.5);
+  backdrop-filter: blur(25px);
+  -webkit-backdrop-filter: blur(25px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.animate-float {
+  animation: float 5s ease-in-out infinite;
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
 }

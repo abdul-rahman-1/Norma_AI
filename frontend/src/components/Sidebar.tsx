@@ -1,5 +1,5 @@
 import { Link, useLocation } from 'react-router-dom';
-import { Home, Calendar, Users, UploadCloud, Settings, LogOut, Shield, Heart, Info } from 'lucide-react';
+import { Home, Calendar, Users, UploadCloud, Settings, LogOut, Shield, Heart, Info, MessageSquare } from 'lucide-react';
 import { motion } from 'framer-motion';
 
 export default function Sidebar() {
@@ -8,10 +8,12 @@ export default function Sidebar() {
 
   const menuItems = [
     { path: '/dashboard', icon: Home, label: 'Overview', roles: ['doctor', 'receptionist'] },
-    { path: '/admin-dashboard', icon: Shield, label: 'Settings', roles: ['admin'] },
-    { path: '/appointments', icon: Calendar, label: 'Schedule', roles: ['admin', 'doctor', 'receptionist'] },
-    { path: '/patients', icon: Users, label: 'Patients', roles: ['admin', 'doctor', 'receptionist'] },
-    { path: '/bulk-upload', icon: UploadCloud, label: 'Add Data', roles: ['admin', 'doctor'] },
+    { path: '/admin-dashboard', icon: Shield, label: 'Admin Panel', roles: ['admin'] },
+    { path: '/inbox', icon: MessageSquare, label: 'Inbox', roles: ['doctor', 'receptionist', 'admin'] },
+    { path: '/appointments', icon: Calendar, label: 'Schedule', roles: ['doctor', 'receptionist'] },
+    { path: '/patients', icon: Users, label: 'Patients', roles: ['doctor', 'receptionist'] },
+    { path: '/bulk-upload', icon: UploadCloud, label: 'Add Data', roles: ['doctor'] },
+    { path: '/settings', icon: Settings, label: 'Settings', roles: ['doctor', 'receptionist', 'admin'] },
   ];
 
   return (

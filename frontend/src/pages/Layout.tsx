@@ -1,70 +1,145 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet, Navigate, Link } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import AIChatAssistant from '../components/AIChatAssistant';
-import { Bell, Search, HelpCircle, User, Settings as SettingsIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Bell, Search, User, Compass, Sparkles, Command, Sun, Network, ShieldCheck, ChevronDown } from 'lucide-react';
+import { motion, useScroll, useSpring } from 'framer-motion';
+import { useState, useEffect } from 'react';
 
 export default function Layout() {
   const token = localStorage.getItem('token');
-  
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const { scrollYProgress } = useScroll();
+  const scaleX = useSpring(scrollYProgress, { stiffness: 100, damping: 30, restDelta: 0.001 });
+
+  useEffect(() => {
+    const handleMouseMove = (e: MouseEvent) => setMousePos({ x: e.clientX, y: e.clientY });
+    window.addEventListener('mousemove', handleMouseMove);
+    return () => window.removeEventListener('mousemove', handleMouseMove);
+  }, []);
+
   if (!token) {
     return <Navigate to="/" replace />;
   }
 
   return (
-    <div className="flex h-screen bg-[#f0f2f5] text-slate-800 font-premium overflow-hidden">
+    <div className="flex h-screen bg-[#f8fafc] text-slate-900 font-display selection:bg-purple-100 selection:text-purple-600 overflow-hidden">
+      {/* Interactive Background Neural Mesh */}
+      <div 
+        className="custom-glow" 
+        style={{ left: mousePos.x, top: mousePos.y }}
+      />
+      
       <Sidebar />
       
-      <div className="flex-1 flex flex-col relative px-6 py-6 overflow-hidden">
+      <div className="flex-1 flex flex-col relative overflow-hidden px-8 py-8 lg:px-12 lg:py-10">
+        
+        {/* State-of-the-Art Command Navbar */}
         <motion.header 
-          initial={{ y: -20, opacity: 0 }}
+          initial={{ y: -50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
-          className="glass h-24 rounded-[2.5rem] flex items-center justify-between px-10 mb-6 shadow-sm border border-white"
+          className="glass-luxury h-24 rounded-[3rem] flex items-center justify-between px-10 mb-10 z-50 relative group border border-white shadow-[0_20px_50px_-15px_rgba(0,0,0,0.03)]"
         >
-          <div className="flex items-center gap-5 bg-white/50 px-6 py-3 rounded-2xl border border-white shadow-inner w-[450px] group focus-within:bg-white transition-all">
-            <Search size={18} className="text-slate-300 group-focus-within:text-purple-500" />
-            <input 
-              type="text" 
-              placeholder="Search for patients or appointments..." 
-              className="bg-transparent border-none outline-none text-sm w-full placeholder-slate-300 text-slate-600 font-medium"
-            />
+          <div className="flex items-center gap-10 flex-1">
+             {/* System Health Indicator */}
+             <div className="flex items-center gap-4 bg-white/40 p-2.5 pr-6 rounded-2xl border border-white/50 shadow-inner group/node cursor-pointer hover:bg-white transition-all duration-500">
+                <div className="w-10 h-10 rounded-xl bg-zinc-900 flex items-center justify-center text-emerald-400 shadow-xl group-hover/node:scale-110 transition-transform">
+                   <Network size={18} className="animate-pulse" />
+                </div>
+                <div>
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] leading-none mb-1">Clinic Node</p>
+                   <p className="text-xs font-black text-slate-800 uppercase tracking-tighter">Alpha-01 Online</p>
+                </div>
+             </div>
+             
+             <div className="h-10 w-[1px] bg-slate-100/50 hidden md:block" />
+             
+             {/* Global Command Search */}
+             <div className="flex items-center gap-5 bg-slate-50/50 px-8 py-4 rounded-[1.8rem] border border-slate-100/50 focus-within:bg-white focus-within:shadow-[0_20px_40px_-10px_rgba(124,58,237,0.1)] focus-within:border-purple-200 transition-all duration-700 max-w-xl flex-1 group/search">
+                <Search size={18} className="text-slate-300 group-focus-within/search:text-purple-500 transition-colors" />
+                <input 
+                  type="text" 
+                  placeholder="Inquire about clinical data, patients, or schedules..." 
+                  className="bg-transparent border-none outline-none text-sm w-full placeholder-slate-300 text-slate-600 font-bold tracking-tight"
+                />
+                <div className="hidden lg:flex items-center gap-2 px-2.5 py-1 bg-white rounded-lg border border-slate-100 text-[10px] font-black text-slate-300 uppercase tracking-widest">
+                   <Command size={10} /> K
+                </div>
+             </div>
           </div>
           
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-3">
-              <button className="nm-button w-12 h-12 rounded-xl flex items-center justify-center text-slate-400 hover:text-purple-600 transition-all relative">
-                <Bell size={20} />
-                <span className="absolute top-3 right-3 w-2 h-2 bg-red-500 rounded-full border-2 border-white shadow-sm" />
-              </button>
-              <button className="nm-button w-12 h-12 rounded-xl flex items-center justify-center text-slate-400 hover:text-purple-600 transition-all">
-                <SettingsIcon size={20} />
+          <div className="flex items-center gap-8 ml-8">
+            {/* Utility Actions */}
+            <div className="flex items-center gap-4">
+              <div className="relative group/btn">
+                <button className="nm-button-luxury w-12 h-12 rounded-xl flex items-center justify-center text-slate-400 hover:text-purple-600 transition-all duration-500">
+                  <Bell size={20} />
+                </button>
+                <span className="absolute top-3 right-3 w-2 h-2 bg-purple-600 rounded-full border-2 border-white shadow-lg animate-pulse" />
+              </div>
+              <button className="nm-button-luxury w-12 h-12 rounded-xl flex items-center justify-center text-slate-400 hover:text-purple-600 transition-all duration-500">
+                <Sun size={20} />
               </button>
             </div>
             
-            <div className="h-10 w-[1px] bg-slate-200" />
+            <div className="h-10 w-[1px] bg-slate-100/50" />
             
-            <div className="flex items-center gap-4 group cursor-pointer">
-              <div className="text-right">
-                <p className="text-sm font-bold text-slate-800 group-hover:text-purple-600 transition-colors">Dr. Sarah Connor</p>
-                <p className="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Hospital Admin</p>
+            {/* Professional Identity Module */}
+            <div className="flex items-center gap-5 pl-2 cursor-pointer group/profile relative">
+              <div className="text-right hidden sm:block">
+                <p className="text-sm font-black text-slate-800 group-hover/profile:text-purple-600 transition-colors leading-none mb-1">Dr. Sarah Connor</p>
+                <div className="flex items-center gap-2 justify-end">
+                   <ShieldCheck size={10} className="text-purple-500" />
+                   <p className="text-[9px] text-slate-400 font-black uppercase tracking-[0.2em]">Chief Medical Lead</p>
+                </div>
               </div>
-              <div className="w-12 h-12 rounded-2xl nm-flat-sm flex items-center justify-center text-purple-600 border border-white group-hover:scale-105 transition-all">
-                <User size={24} />
+              <div className="w-14 h-14 rounded-[1.5rem] bg-zinc-900 border-4 border-white shadow-2xl overflow-hidden group-hover/profile:scale-105 group-hover/profile:shadow-purple-500/10 transition-all duration-500 relative">
+                 <img src="https://i.pravatar.cc/100?u=sarah" alt="Profile" className="w-full h-full object-cover" />
+                 <div className="absolute inset-0 bg-purple-600/10 opacity-0 group-hover/profile:opacity-100 transition-opacity" />
               </div>
+              <ChevronDown size={14} className="text-slate-300 group-hover/profile:text-purple-500 transition-colors" />
             </div>
           </div>
+
+          {/* SOTA Progress Ribbon */}
+          <motion.div 
+            className="absolute bottom-[-2px] left-0 right-0 h-1 bg-gradient-to-r from-purple-600 to-indigo-500 origin-left" 
+            style={{ scaleX, borderRadius: '0 0 3rem 3rem' }} 
+          />
         </motion.header>
 
-        <main className="flex-1 overflow-y-auto pr-2 scrollbar-thin">
+        <main className="flex-1 overflow-y-auto pr-4 scrollbar-thin relative z-10 pb-32">
           <Outlet />
         </main>
+
+        {/* Ethereal Navigation Nexus */}
+        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 glass-luxury ethereal-border px-10 py-5 rounded-[2.5rem] flex items-center gap-12 z-[60] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] group hover:py-6 transition-all duration-700">
+           <div className="flex items-center gap-3 pr-8 border-r border-slate-100">
+              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
+              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Secure Session</span>
+           </div>
+           <div className="flex gap-10">
+              {[
+                { label: 'Diagnostics', path: '/dashboard' },
+                { label: 'Encounters', path: '/appointments' },
+                { label: 'Global Registry', path: '/patients' }
+              ].map(item => (
+                <Link 
+                  key={item.label} 
+                  to={item.path}
+                  className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] hover:text-purple-600 transition-all relative group/item"
+                >
+                  {item.label}
+                  <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-0 h-1 bg-purple-600 rounded-full group-hover/item:w-full transition-all duration-500" />
+                </Link>
+              ))}
+           </div>
+        </div>
       </div>
 
       <AIChatAssistant />
-
-      {/* Subtle Background Decorative Blobs */}
-      <div className="fixed top-[-10%] right-[-10%] w-[500px] h-[500px] bg-purple-200/20 blur-[120px] rounded-full -z-10" />
-      <div className="fixed bottom-[-10%] left-[20%] w-[400px] h-[400px] bg-blue-200/10 blur-[100px] rounded-full -z-10" />
+      
+      {/* Background Aesthetic Orchestration */}
+      <div className="fixed inset-0 pointer-events-none -z-20 mesh-bg opacity-40" />
     </div>
   );
 }
