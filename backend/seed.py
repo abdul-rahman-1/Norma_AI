@@ -34,7 +34,31 @@ async def seed_db():
         "created_at": datetime.utcnow(),
         "updated_at": datetime.utcnow()
     }
-    await db.users.insert_one(admin_user)
+    
+    doc1_user = {
+        "phone_number": "+971501234567",
+        "name": "Dr. Sarah Connor",
+        "email": "sarah@norma.ai",
+        "role": "doctor",
+        "status": "active",
+        "password_hash": get_password_hash("norma2026"),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
+    }
+
+    doc2_user = {
+        "phone_number": "+971509876543",
+        "name": "Dr. Gregory House",
+        "email": "house@norma.ai",
+        "role": "doctor",
+        "status": "active",
+        "password_hash": get_password_hash("norma2026"),
+        "created_at": datetime.utcnow(),
+        "updated_at": datetime.utcnow()
+    }
+    
+    await db.users.insert_many([admin_user, doc1_user, doc2_user])
+    print("Seeded Admin and Doctor login accounts.")
 
     # 3. Seed Doctors
     doc1_id = ObjectId()

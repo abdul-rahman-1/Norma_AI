@@ -1,1 +1,75 @@
 @import "tailwindcss";
+
+:root {
+  --bg-soft: #f0f2f5;
+  --purple-primary: #7c3aed;
+  --purple-soft: #ede9fe;
+  --text-main: #1e293b;
+  --text-light: #64748b;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-soft);
+  color: var(--text-main);
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6, .font-premium {
+  font-family: 'Outfit', sans-serif;
+}
+
+/* Neuromorphism Utilities */
+.nm-flat {
+  background: #f0f2f5;
+  box-shadow: 20px 20px 60px #ccd0d5, -20px -20px 60px #ffffff;
+}
+
+.nm-flat-sm {
+  background: #f0f2f5;
+  box-shadow: 6px 6px 12px #ccd0d5, -6px -6px 12px #ffffff;
+}
+
+.nm-inset {
+  background: #f0f2f5;
+  box-shadow: inset 6px 6px 12px #ccd0d5, inset -6px -6px 12px #ffffff;
+}
+
+.nm-button {
+  background: #f0f2f5;
+  box-shadow: 6px 6px 12px #ccd0d5, -6px -6px 12px #ffffff;
+  transition: all 0.2s ease;
+}
+
+.nm-button:active {
+  box-shadow: inset 4px 4px 8px #ccd0d5, inset -4px -4px 8px #ffffff;
+  transform: scale(0.98);
+}
+
+/* Glassmorphism Utilities */
+.glass {
+  background: rgba(255, 255, 255, 0.7);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+}
+
+.glass-dark {
+  background: rgba(15, 23, 42, 0.8);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+/* Premium Scrollbar */
+.scrollbar-thin::-webkit-scrollbar {
+  width: 5px;
+}
+.scrollbar-thin::-webkit-scrollbar-track {
+  background: transparent;
+}
+.scrollbar-thin::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 20px;
+}
