@@ -23,9 +23,24 @@ async def connect_to_mongo():
         # Verify connection
         await db_instance.client.admin.command('ping')
         
+        # Clean up existing problematic indexes if they exist
+        try:
+            await db_instance.db.patients.drop_index("phone_number")
+            await db_instance.db.patients.drop_index("phone_number_1")
+        except:
+            pass # Ignore if indexes don't exist
+
         # Create Indexes for performance and uniqueness
-        await db_instance.db.patients.create_index("phone", unique=True)
-        await db_instance.db.patients.create_index("phone_number")
+        # partialFilterExpression ensures that uniqueness is only enforced for documents where the field is a string (ignoring nulls)
+        await db_instance.db.patients.create_index(
+            "phone", 
+            unique=True, 
+            partialFilterExpression={"phone": {"$type": "string"}}
+        )
+        await db_instance.db.patients.create_index(
+            "phone_number", 
+            partialFilterExpression={"phone_number": {"$type": "string"}}
+        )
         await db_instance.db.appointments.create_index("patient_id")
         await db_instance.db.appointments.create_index("doctor_id")
         await db_instance.db.conversations.create_index([("phone", 1), ("timestamp", -1)])

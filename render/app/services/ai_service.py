@@ -31,14 +31,17 @@ def normalize_phone(phone: str) -> str:
 # --- CLINICAL TOOLS ---
 def register_new_patient(
     full_name: str, date_of_birth: str, gender: str, phone_number: Optional[str] = None,
-    email: Optional[str] = None, address: Optional[str] = None, medical_notes: Optional[str] = None
+    email: Optional[str] = None, address: Optional[str] = None, notes: Optional[str] = None,
+    preferred_language: str = "en", insurance_provider: Optional[str] = None,
+    insurance_id: Optional[str] = None
 ):
     return {
         "action": "REGISTER", 
         "data": {
             "full_name": full_name, "date_of_birth": date_of_birth, "gender": gender,
             "phone_number": phone_number, "email": email, "address": address,
-            "medical_notes": medical_notes
+            "notes": notes, "preferred_language": preferred_language,
+            "insurance_provider": insurance_provider, "insurance_id": insurance_id
         }
     }
 
@@ -63,8 +66,8 @@ def get_patient_appointments():
 class AIService:
     def __init__(self):
         self.tools = [register_new_patient, check_available_slots, book_appointment, cancel_appointment, get_patient_appointments]
-        # Fixed model name to a valid version
-        self.model = genai.GenerativeModel(model_name='gemini-1.5-flash', tools=self.tools)
+        # Strictly using gemini-2.5-flash per user instruction
+        self.model = genai.GenerativeModel(model_name='gemini-2.5-flash', tools=self.tools)
         self.system_instruction = """
         You are the NORMA AI Clinical Sentinel. Your database is 'norma_ai'.
         
@@ -88,15 +91,17 @@ class AIService:
                 return "I'm sorry, I'm having trouble connecting to my clinical database right now. Please try again in a few moments. 🏥"
             
             normalized_phone = normalize_phone(phone_raw)
+            # Remove + for some search variants
+            phone_digits = "".join(filter(str.isdigit, normalized_phone))
+            
             flush_print(f"AI_PROCESS: RawPhone={phone_raw} Normalized={normalized_phone}")
             
-            # 1. FETCH PATIENT - Recognition fix
+            # 1. FETCH PATIENT - Recognition fix using schema fields
             patient = await db.patients.find_one({
                 "$or": [
-                    {"phone": normalized_phone},
                     {"phone_number": normalized_phone},
-                    {"phone": phone_raw},
-                    {"phone_number": phone_raw}
+                    {"phone_number": phone_raw},
+                    {"phone_number": {"$regex": phone_digits}}
                 ]
             })
             
@@ -112,12 +117,11 @@ class AIService:
             docs = await db.doctors.find({"status": "active"}).to_list(length=10)
             doctor_list = "\n".join([f"- {d['full_name']} ({d.get('specialization', d.get('specialty', 'General'))})" for d in docs])
 
-            # 3. CONVERSATION HISTORY - Bug fix (don't skip consecutive messages)
+            # 3. CONVERSATION HISTORY
             chat_history = []
             history = await db.conversations.find({"phone": normalized_phone}).sort("timestamp", -1).limit(15).to_list(length=15)
             for h in reversed(history):
                 role = "user" if h['role'] == "user" else "model"
-                # Combine consecutive messages from the same role if necessary, or just append
                 if chat_history and chat_history[-1]["role"] == role:
                     chat_history[-1]["parts"].append(h['text'])
                 else:
@@ -162,19 +166,32 @@ class AIService:
         flush_print(f"TOOL_EXEC: {name} with args {args}")
         try:
             if name == "register_new_patient":
+                # Handle Date conversion
+                dob_val = args['date_of_birth']
+                try:
+                    dob_dt = datetime.strptime(dob_val, "%Y-%m-%d")
+                except:
+                    try: dob_dt = datetime.strptime(dob_val, "%d-%m-%Y")
+                    except: dob_dt = dob_val # Fallback to string if parsing fails
+                
                 new_patient = {
+                    "patient_uuid": str(uuid.uuid4()),
                     "full_name": args['full_name'],
-                    "phone": sender_phone,
                     "phone_number": sender_phone,
-                    "dob": args['date_of_birth'],
+                    "date_of_birth": dob_dt,
                     "gender": args['gender'],
-                    "address": args.get('address'),
-                    "medical_notes": args.get('medical_notes'),
+                    "email": args.get('email', ""),
+                    "address": args.get('address', ""),
+                    "notes": args.get('notes', ""),
+                    "preferred_language": args.get('preferred_language', "en"),
+                    "insurance_provider": args.get('insurance_provider', ""),
+                    "insurance_id": args.get('insurance_id', ""),
+                    "is_active": True,
                     "created_at": datetime.utcnow(),
                     "updated_at": datetime.utcnow()
                 }
-                result = await db.patients.update_one(
-                    {"phone": sender_phone}, 
+                await db.patients.update_one(
+                    {"phone_number": sender_phone}, 
                     {"$set": new_patient}, 
                     upsert=True
                 )
@@ -184,7 +201,6 @@ class AIService:
                 if not patient:
                     return {"status": "error", "message": "Patient must be registered before booking."}
                 
-                # Find doctor ID
                 doctor = await db.doctors.find_one({"full_name": {"$regex": args['doctor_name'], "$options": "i"}})
                 if not doctor:
                     return {"status": "error", "message": f"Doctor {args['doctor_name']} not found."}
@@ -203,7 +219,6 @@ class AIService:
                 return {"status": "success", "message": "Appointment booked successfully."}
 
             elif name == "check_available_slots":
-                # Mock availability for now, but linked to doctor
                 doctor = await db.doctors.find_one({"full_name": {"$regex": args['doctor_name'], "$options": "i"}})
                 if not doctor:
                     return {"status": "error", "message": "Doctor not found."}
