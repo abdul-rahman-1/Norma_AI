@@ -1,7 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException, Body
 from app.db.mongodb import get_db
 from app.schemas.models import Patient, PatientBase
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user, check_role
 from typing import List
 from bson import ObjectId
 from datetime import datetime
@@ -9,7 +9,7 @@ from datetime import datetime
 router = APIRouter(prefix="/patients", tags=["patients"])
 
 @router.get("/", response_model=List[dict])
-async def get_patients(current_user: dict = Depends(get_current_user)):
+async def get_patients(current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))):
     db = get_db()
     # If doctor, maybe filter by clinic. For now, get all.
     patients_cursor = db.patients.find()
@@ -23,7 +23,7 @@ async def get_patients(current_user: dict = Depends(get_current_user)):
 from app.services.whatsapp_service import whatsapp_service
 
 @router.post("/", response_model=Patient)
-async def create_patient(patient: PatientBase, current_user: dict = Depends(get_current_user)):
+async def create_patient(patient: PatientBase, current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))):
     db = get_db()
     patient_dict = patient.dict()
     patient_dict["created_by"] = current_user["_id"]
@@ -42,7 +42,7 @@ async def create_patient(patient: PatientBase, current_user: dict = Depends(get_
     return patient_dict
 
 @router.get("/{patient_id}", response_model=Patient)
-async def get_patient(patient_id: str, current_user: dict = Depends(get_current_user)):
+async def get_patient(patient_id: str, current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))):
     db = get_db()
     patient = await db.patients.find_one({"_id": ObjectId(patient_id)})
     if not patient:
@@ -50,7 +50,7 @@ async def get_patient(patient_id: str, current_user: dict = Depends(get_current_
     return patient
 
 @router.patch("/{patient_id}", response_model=Patient)
-async def update_patient(patient_id: str, patient_update: dict, current_user: dict = Depends(get_current_user)):
+async def update_patient(patient_id: str, patient_update: dict, current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))):
     db = get_db()
     patient_update["updated_at"] = datetime.utcnow()
     result = await db.patients.find_one_and_update(
@@ -63,7 +63,7 @@ async def update_patient(patient_id: str, patient_update: dict, current_user: di
     return result
 
 @router.delete("/{patient_id}")
-async def delete_patient(patient_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_patient(patient_id: str, current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))):
     db = get_db()
     result = await db.patients.delete_one({"_id": ObjectId(patient_id)})
     if result.deleted_count == 0:

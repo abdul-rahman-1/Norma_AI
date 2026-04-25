@@ -1,47 +1,45 @@
 import { useState, useEffect } from 'react';
 import axios from 'axios';
 import { 
-  Calendar, 
-  Plus, 
-  MoreVertical, 
-  Edit2, 
-  Trash2, 
-  Loader2, 
-  X,
-  Clock,
-  User,
-  Stethoscope,
-  ChevronRight,
-  Sparkles,
-  Zap
+  Calendar, Plus, MoreVertical, Edit2, Trash2, Loader2, X,
+  Clock, User, Stethoscope, ChevronRight, Sparkles, Send, Zap,
+  AlertCircle, CheckCircle2, Search, Filter, RefreshCw
 } from 'lucide-react';
+import { cn } from '../utils/cn';
+import { motion } from 'framer-motion';
 
 export default function Appointments() {
   const [appointments, setAppointments] = useState<any[]>([]);
   const [patients, setPatients] = useState<any[]>([]);
+  const [doctors, setDoctors] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [editingApt, setEditingApt] = useState<any>(null);
-  const [formData, setFormData] = useState({
+  
+  const initialForm = {
     patient_id: '',
+    doctor_id: '',
     scheduled_at: '',
-    type: 'General Checkup',
+    type: 'Consultation',
+    notes: '',
     status: 'upcoming'
-  });
-  const [activeMenu, setActiveMenu] = useState<string | null>(null);
+  };
+  
+  const [formData, setFormData] = useState(initialForm);
 
   const fetchData = async () => {
     try {
       const token = localStorage.getItem('token');
-      const headers = { Authorization: `Bearer ${token}` };
-      const [aptsRes, patientsRes] = await Promise.all([
-        axios.get('http://localhost:5000/api/appointments', { headers }),
-        axios.get('http://localhost:5000/api/patients', { headers })
+      const [aptRes, patRes, docRes] = await Promise.all([
+        axios.get('http://localhost:5000/api/appointments/', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get('http://localhost:5000/api/patients/', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get('http://localhost:5000/api/doctors', { headers: { Authorization: `Bearer ${token}` } })
       ]);
-      setAppointments(aptsRes.data);
-      setPatients(patientsRes.data);
+      setAppointments(aptRes.data);
+      setPatients(patRes.data);
+      setDoctors(docRes.data);
     } catch (err) {
-      console.error('Data synchronization failed', err);
+      console.error(err);
     } finally {
       setLoading(false);
     }
@@ -60,254 +58,169 @@ export default function Appointments() {
           headers: { Authorization: `Bearer ${token}` }
         });
       } else {
-        await axios.post('http://localhost:5000/api/appointments', formData, {
+        await axios.post('http://localhost:5000/api/appointments/', formData, {
           headers: { Authorization: `Bearer ${token}` }
         });
       }
       setShowModal(false);
-      setEditingApt(null);
       fetchData();
     } catch (err) {
-      console.error('Temporal alignment failed', err);
-    }
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!window.confirm('Delete this clinical encounter from the schedule?')) return;
-    const token = localStorage.getItem('token');
-    try {
-      await axios.delete(`http://localhost:5000/api/appointments/${id}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      fetchData();
-    } catch (err) {
-      console.error('Encounter removal failed', err);
+      console.error(err);
     }
   };
 
   if (loading) {
     return (
-      <div className="h-full flex flex-col items-center justify-center space-y-6">
-        <div className="relative">
-           <div className="absolute inset-0 blur-2xl bg-purple-500/20 rounded-full animate-pulse" />
-           <Loader2 className="animate-spin text-purple-600 relative z-10" size={48} />
-        </div>
-        <p className="text-gray-400 font-black uppercase tracking-[0.3em] text-[10px] animate-pulse">Syncing Practice Schedule...</p>
+      <div className="h-full flex items-center justify-center bg-white">
+        <Loader2 className="animate-spin text-black" size={32} />
       </div>
     );
   }
 
   return (
-    <div className="space-y-12 animate-in fade-in duration-1000 pb-20">
+    <div className="max-w-[1400px] mx-auto space-y-12 animate-in fade-in duration-700 pb-20">
       <div className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
         <div>
-          <h1 className="text-4xl font-black text-zinc-900 tracking-tight uppercase">Clinical Schedule</h1>
-          <p className="text-gray-500 mt-2 font-medium text-lg italic">Coordination of clinical resources and patient temporal alignments.</p>
+          <h1 className="text-4xl font-black text-black tracking-tight uppercase italic">Temporal Mesh</h1>
+          <p className="text-zinc-500 mt-2 font-bold text-lg">Master orchestration of clinical encounters and provider availability.</p>
         </div>
         <button 
-          onClick={() => {
-            setEditingApt(null);
-            setFormData({ patient_id: '', scheduled_at: '', type: 'General Checkup', status: 'upcoming' });
-            setShowModal(true);
-          }}
-          className="group bg-[#09090b] text-white px-10 py-5 rounded-[2rem] text-sm font-black shadow-2xl shadow-zinc-900/20 hover:bg-purple-600 transition-all flex items-center gap-3"
+          onClick={() => { setEditingApt(null); setFormData(initialForm); setShowModal(true); }}
+          className="group bg-black text-white px-10 py-5 rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-[#7c3aed] transition-all flex items-center gap-4 active:scale-95"
         >
-          <Plus size={20} className="text-purple-400 group-hover:rotate-90 transition-transform duration-500" />
-          Authorize Encounter
+          <Calendar size={18} className="text-white group-hover:rotate-12 transition-transform" /> 
+          Initialize Encounter
         </button>
       </div>
 
-      <div className="bg-white rounded-[3rem] border border-gray-100 shadow-sm overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-left">
-            <thead>
-              <tr className="bg-gray-50/50">
-                <th className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Patient Asset</th>
-                <th className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Temporal Alignment</th>
-                <th className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Clinical Protocol</th>
-                <th className="px-10 py-8 text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Session Status</th>
-                <th className="px-10 py-8"></th>
-              </tr>
-            </thead>
-            <tbody className="divide-y divide-gray-50">
-              {appointments.map((apt) => (
-                <tr key={apt._id} className="hover:bg-gray-50/80 transition-all group">
-                  <td className="px-10 py-8">
-                    <div className="flex items-center gap-5">
-                      <div className="w-14 h-14 rounded-2xl bg-zinc-900 border border-gray-800 flex items-center justify-center text-xs font-black text-purple-400 shadow-xl group-hover:scale-105 transition-transform duration-500">
-                        {apt.patient_name?.split(' ').map((n: string) => n[0]).join('') || 'P'}
-                      </div>
-                      <div>
-                        <p className="text-base font-black text-zinc-900 group-hover:text-purple-600 transition-colors tracking-tight">{apt.patient_name}</p>
-                        <p className="text-[10px] text-gray-400 font-black uppercase tracking-widest mt-1 opacity-70 italic">{apt.patient_phone}</p>
-                      </div>
-                    </div>
-                  </td>
-                  <td className="px-10 py-8">
-                    <div className="flex items-center gap-4">
-                       <div className="p-2.5 bg-purple-50 rounded-xl text-purple-600">
-                          <Clock size={18} />
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-10">
+        
+        <div className="lg:col-span-8 space-y-8">
+          <div className="flex items-center gap-4 bg-zinc-50 p-4 rounded-xl border border-zinc-200 mb-4">
+             <Search size={20} className="text-zinc-400 ml-2" />
+             <input type="text" placeholder="Locate encounter record..." className="bg-transparent border-none outline-none text-sm w-full font-bold text-black placeholder-zinc-300" />
+          </div>
+
+          <div className="bg-white rounded-[2rem] border-2 border-zinc-50 overflow-hidden shadow-sm p-4">
+             <div className="space-y-4">
+                {appointments.length > 0 ? appointments.map((apt) => (
+                  <motion.div 
+                    key={apt._id}
+                    whileHover={{ scale: 1.01, x: 10 }}
+                    className="p-8 rounded-2xl bg-zinc-50/50 border border-zinc-100 hover:border-black hover:bg-white transition-all group flex items-center justify-between"
+                  >
+                    <div className="flex items-center gap-8">
+                       <div className="w-16 h-16 rounded-xl bg-black flex flex-col items-center justify-center text-center">
+                          <p className="text-[9px] font-black text-zinc-500 uppercase">{new Date(apt.scheduled_at).toLocaleDateString([], { month: 'short' })}</p>
+                          <p className="text-2xl font-black text-white leading-none">{new Date(apt.scheduled_at).getDate()}</p>
                        </div>
                        <div>
-                          <span className="text-sm font-black text-zinc-900 block">
-                            {new Date(apt.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', hour12: true })}
-                          </span>
-                          <span className="text-[9px] font-black text-gray-400 uppercase tracking-widest mt-1 block">
-                            {new Date(apt.scheduled_at).toLocaleDateString([], { day: 'numeric', month: 'long', year: 'numeric' })}
-                          </span>
+                          <p className="text-xl font-black text-black tracking-tight flex items-center gap-3">
+                            {apt.patient_name}
+                            <span className="text-[9px] px-3 py-1 bg-black text-white rounded font-black uppercase tracking-widest">{apt.type}</span>
+                          </p>
+                          <div className="flex items-center gap-6 mt-2">
+                             <p className="text-xs font-bold text-zinc-400 flex items-center gap-2">
+                               <Clock size={14} className="text-[#7c3aed]" />
+                               {new Date(apt.scheduled_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                             </p>
+                             <p className="text-xs font-bold text-zinc-400 flex items-center gap-2">
+                               <Stethoscope size={14} className="text-[#7c3aed]" />
+                               Dr. {doctors.find(d => d._id === apt.doctor_id)?.full_name || 'Specialist'}
+                             </p>
+                          </div>
                        </div>
                     </div>
-                  </td>
-                  <td className="px-10 py-8">
-                    <span className="text-[10px] font-black px-4 py-2 bg-white rounded-xl border-2 border-gray-100 text-zinc-900 uppercase tracking-widest shadow-sm">
-                      {apt.type}
-                    </span>
-                  </td>
-                  <td className="px-10 py-8">
-                    <div className={`inline-flex items-center gap-2.5 px-3 py-1.5 rounded-xl border ${
-                      apt.status.toLowerCase() === 'completed' ? 'bg-purple-50 border-purple-100 text-purple-600' : 'bg-amber-50 border-amber-100 text-amber-600'
-                    }`}>
-                      <div className={`w-2 h-2 rounded-full ${
-                        apt.status.toLowerCase() === 'completed' ? 'bg-purple-600' : 'bg-amber-500'
-                      } shadow-sm animate-pulse`} />
-                      <span className="text-[10px] font-black uppercase tracking-widest">{apt.status}</span>
+
+                    <div className="flex items-center gap-10">
+                       <div className={cn(
+                         "px-5 py-2 rounded-lg text-[9px] font-black uppercase tracking-widest border-2",
+                         apt.status === 'upcoming' ? 'bg-black text-white border-black' : 'bg-white text-zinc-300 border-zinc-100'
+                       )}>
+                         {apt.status}
+                       </div>
+                       <button className="text-zinc-300 hover:text-black p-3 rounded-xl border border-transparent hover:border-zinc-200 transition-all">
+                          <MoreVertical size={20} />
+                       </button>
                     </div>
-                  </td>
-                  <td className="px-10 py-8 text-right relative">
-                    <button 
-                      onClick={() => setActiveMenu(activeMenu === apt._id ? null : apt._id)}
-                      className="text-gray-300 hover:text-purple-600 p-3 rounded-2xl hover:bg-white transition-all shadow-none hover:shadow-lg"
-                    >
-                      <MoreVertical size={24} />
-                    </button>
-                    
-                    {activeMenu === apt._id && (
-                      <div className="absolute right-16 top-1/2 -translate-y-1/2 bg-white border border-gray-100 rounded-2xl shadow-[0_20px_50px_rgba(0,0,0,0.15)] z-50 py-3 w-48 animate-in zoom-in-95 duration-300 text-left">
-                        <button 
-                          onClick={() => {
-                            setEditingApt(apt);
-                            setFormData({
-                              patient_id: apt.patient_id,
-                              scheduled_at: apt.scheduled_at.split('.')[0],
-                              type: apt.type,
-                              status: apt.status
-                            });
-                            setShowModal(true);
-                            setActiveMenu(null);
-                          }}
-                          className="w-full flex items-center justify-between px-6 py-3 text-sm font-black text-zinc-900 hover:bg-purple-50 hover:text-purple-600 transition-all group/btn"
-                        >
-                          Reschedule <Edit2 size={16} />
-                        </button>
-                        <div className="h-[1px] bg-gray-50 my-1 mx-4" />
-                        <button 
-                          onClick={() => {
-                            handleDelete(apt._id);
-                            setActiveMenu(null);
-                          }}
-                          className="w-full flex items-center justify-between px-6 py-3 text-sm font-black text-red-500 hover:bg-red-50 transition-all"
-                        >
-                          Cancel <Trash2 size={16} />
-                        </button>
-                      </div>
-                    )}
-                  </td>
-                </tr>
-              ))}
-              {appointments.length === 0 && (
-                <tr>
-                   <td colSpan={5} className="px-10 py-32 text-center">
-                    <div className="flex flex-col items-center gap-4 opacity-30 grayscale">
-                       <Calendar size={64} className="text-gray-400" />
-                       <p className="text-lg font-bold text-gray-500 italic">Clinical schedule synchronization complete. Zero encounters detected.</p>
-                    </div>
-                  </td>
-                </tr>
-              )}
-            </tbody>
-          </table>
+                  </motion.div>
+                )) : (
+                  <div className="py-32 text-center flex flex-col items-center gap-4 opacity-20 grayscale scale-90">
+                     <Sparkles size={64} className="text-black" />
+                     <p className="text-lg font-bold text-black italic uppercase tracking-tighter">Temporal Grid Empty. No encounters identified.</p>
+                  </div>
+                )}
+             </div>
+          </div>
+        </div>
+
+        <div className="lg:col-span-4 space-y-10">
+           <div className="bg-black text-white p-10 rounded-[2.5rem] relative overflow-hidden group">
+              <div className="absolute top-0 right-0 p-10 opacity-10 group-hover:rotate-45 transition-transform duration-1000">
+                 <Zap size={150} fill="white" />
+              </div>
+              <h3 className="text-2xl font-black tracking-tighter uppercase italic mb-4 relative z-10">Clinical Pulse</h3>
+              <p className="text-zinc-500 text-xs font-bold mb-10 leading-relaxed relative z-10">"Autonomous mesh synchronization active. Node stability verified at 99.9%."</p>
+              
+              <div className="space-y-4 relative z-10">
+                {[
+                  { label: 'Sync Axis', val: 'Real-time', icon: RefreshCw },
+                  { label: 'Mesh Node', val: 'Alpha-9', icon: Zap },
+                ].map((stat, i) => (
+                  <div key={i} className="flex items-center justify-between p-4 bg-zinc-900 rounded-xl border border-white/5">
+                     <span className="text-[10px] font-black uppercase tracking-widest text-zinc-500">{stat.label}</span>
+                     <span className="text-xs font-black uppercase italic text-[#7c3aed]">{stat.val}</span>
+                  </div>
+                ))}
+              </div>
+
+              <button className="w-full mt-10 py-5 rounded-xl bg-[#7c3aed] text-white text-[10px] font-black uppercase tracking-[0.3em] hover:bg-white hover:text-black transition-all shadow-xl active:scale-95">
+                 Optimize Timeline
+              </button>
+           </div>
         </div>
       </div>
 
       {showModal && (
-        <div className="fixed inset-0 bg-zinc-900/70 backdrop-blur-3xl flex items-center justify-center z-[100] p-6">
-          <div className="bg-white border border-gray-200 rounded-[3.5rem] w-full max-w-2xl shadow-[0_60px_120px_-20px_rgba(0,0,0,0.4)] overflow-hidden animate-in zoom-in-95 duration-700">
-            <div className="p-12 border-b border-gray-50 flex justify-between items-center bg-gray-50/50">
-              <div>
-                <h2 className="text-3xl font-black text-zinc-900 tracking-tighter uppercase leading-none">
-                  {editingApt ? 'Reschedule session' : 'Schedule Session'}
-                </h2>
-                <p className="text-[10px] text-gray-400 font-black uppercase tracking-[0.4em] mt-4 italic">Practice Alignment Matrix</p>
-              </div>
-              <button onClick={() => setShowModal(false)} className="bg-white p-5 rounded-[1.8rem] text-gray-300 hover:text-red-500 border border-gray-100 hover:border-red-100 transition-all shadow-sm">
-                <X size={32} />
-              </button>
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-xl flex items-center justify-center z-[100] p-6">
+          <div className="bg-white border-4 border-black rounded-[3rem] w-full max-w-4xl shadow-2xl overflow-hidden animate-in zoom-in-95 duration-700">
+            <div className="p-12 border-b-2 border-zinc-50 flex justify-between items-center bg-zinc-50/50">
+               <div>
+                  <h2 className="text-3xl font-black text-black tracking-tighter uppercase italic">Temporal Slotting</h2>
+                  <p className="text-[10px] text-[#7c3aed] font-black uppercase tracking-[0.4em] mt-2 italic">Encounter Alignment Matrix</p>
+               </div>
+               <button onClick={() => setShowModal(false)} className="bg-black text-white p-4 rounded-xl hover:bg-[#7c3aed] transition-all">
+                 <X size={24} />
+               </button>
             </div>
-            
-            <form onSubmit={handleSubmit} className="p-12 md:p-16 space-y-12">
+
+            <form onSubmit={handleSubmit} className="p-12 grid grid-cols-2 gap-10 bg-white">
               <div className="space-y-4">
-                <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] ml-2">Identify Patient Asset</label>
-                <div className="relative group">
-                  <User size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-purple-600 transition-colors" />
-                  <select 
-                    required
-                    className="w-full bg-gray-50 border-2 border-transparent text-zinc-900 pl-16 pr-8 py-6 rounded-[1.8rem] outline-none focus:bg-white focus:border-purple-200 transition-all text-base font-black shadow-inner appearance-none cursor-pointer"
-                    value={formData.patient_id}
-                    onChange={e => setFormData({...formData, patient_id: e.target.value})}
-                  >
-                    <option value="">Select registry profile...</option>
-                    {patients.map(p => (
-                      <option key={p._id} value={p._id}>{p.full_name} ({p.phone_number})</option>
-                    ))}
-                  </select>
-                </div>
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Identity *</label>
+                <select required className="w-full bg-zinc-50 border-2 border-transparent text-black px-8 py-5 rounded-xl outline-none focus:bg-white focus:border-black transition-all text-base font-black shadow-inner appearance-none" value={formData.patient_id} onChange={e => setFormData({...formData, patient_id: e.target.value})}>
+                  <option value="">Select identity...</option>
+                  {patients.map(p => <option key={p._id} value={p._id}>{p.full_name}</option>)}
+                </select>
               </div>
 
-              <div className="grid grid-cols-2 gap-10">
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] ml-2">Temporal Alignment</label>
-                  <div className="relative group">
-                    <Calendar size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-purple-600 transition-colors pointer-events-none" />
-                    <input 
-                      type="datetime-local" 
-                      required
-                      className="w-full bg-gray-50 border-2 border-transparent text-zinc-900 pl-16 pr-8 py-6 rounded-[1.8rem] outline-none focus:bg-white focus:border-purple-200 transition-all text-base font-black shadow-inner"
-                      value={formData.scheduled_at}
-                      onChange={e => setFormData({...formData, scheduled_at: e.target.value})}
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <label className="text-[10px] font-black text-gray-400 uppercase tracking-[0.25em] ml-2">Clinical Protocol</label>
-                  <div className="relative group">
-                    <Stethoscope size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-gray-300 group-focus-within:text-purple-600 transition-colors pointer-events-none" />
-                    <input 
-                      type="text" 
-                      required
-                      placeholder="e.g. Diagnostic Session"
-                      className="w-full bg-gray-50 border-2 border-transparent text-zinc-900 pl-16 pr-8 py-6 rounded-[1.8rem] outline-none focus:bg-white focus:border-purple-200 transition-all text-base font-black shadow-inner"
-                      value={formData.type}
-                      onChange={e => setFormData({...formData, type: e.target.value})}
-                    />
-                  </div>
-                </div>
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Provider *</label>
+                <select required className="w-full bg-zinc-50 border-2 border-transparent text-black px-8 py-5 rounded-xl outline-none focus:bg-white focus:border-black transition-all text-base font-black shadow-inner appearance-none" value={formData.doctor_id} onChange={e => setFormData({...formData, doctor_id: e.target.value})}>
+                  <option value="">Select provider...</option>
+                  {doctors.map(d => <option key={d._id} value={d._id}>{d.full_name}</option>)}
+                </select>
               </div>
 
-              <div className="pt-8 flex gap-10">
-                <button 
-                  type="button"
-                  onClick={() => setShowModal(false)}
-                  className="flex-1 bg-white text-gray-400 py-7 rounded-[2.2rem] font-black uppercase tracking-[0.3em] text-xs border-2 border-gray-100 hover:bg-gray-50 hover:text-zinc-900 transition-all shadow-sm"
-                >
-                  Discard Session
-                </button>
-                <button 
-                  type="submit"
-                  className="flex-1 bg-zinc-900 text-white py-7 rounded-[2.2rem] font-black uppercase tracking-[0.3em] text-xs shadow-2xl shadow-zinc-900/20 hover:bg-purple-600 hover:-translate-y-1 transition-all active:scale-95 flex items-center justify-center gap-4"
-                >
-                   {editingApt ? 'Confirm Realignment' : 'Authorize Encounter'}
-                   <Zap size={18} className="text-purple-400" />
+              <div className="space-y-4">
+                <label className="text-[10px] font-black text-zinc-400 uppercase tracking-widest ml-2">Temporal Point *</label>
+                <input type="datetime-local" required className="w-full bg-zinc-50 border-2 border-transparent text-black px-8 py-5 rounded-xl outline-none focus:bg-white focus:border-black transition-all text-base font-black shadow-inner" value={formData.scheduled_at} onChange={e => setFormData({...formData, scheduled_at: e.target.value})} />
+              </div>
+
+              <div className="col-span-2 pt-10 flex gap-8">
+                <button type="button" onClick={() => setShowModal(false)} className="flex-1 bg-zinc-100 text-black py-6 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-zinc-200 transition-all">Abort Sequence</button>
+                <button type="submit" className="flex-1 bg-black text-white py-6 rounded-xl font-black uppercase tracking-widest text-xs hover:bg-[#7c3aed] transition-all shadow-2xl active:scale-95 flex items-center justify-center gap-4">
+                   Commit Slot
+                   <Zap size={16} className="text-[#7c3aed]" />
                 </button>
               </div>
             </form>

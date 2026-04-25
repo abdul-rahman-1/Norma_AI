@@ -31,7 +31,6 @@ export default function AIChatAssistant() {
 
     try {
       const token = localStorage.getItem('token');
-      // We use the same webhook logic for consistency
       const res = await axios.post('http://localhost:5000/api/webhook/whatsapp', {
         From: 'web-terminal',
         Body: userMessage
@@ -53,13 +52,13 @@ export default function AIChatAssistant() {
       {/* Floating Button */}
       <button 
         onClick={() => setIsOpen(!isOpen)}
-        className={`fixed bottom-8 right-8 w-16 h-16 rounded-[1.25rem] flex items-center justify-center transition-all duration-500 shadow-2xl z-50 border ${
-          isOpen ? 'bg-[#0b1326] border-[#44ddc1]/30' : 'bg-[#44ddc1] hover:bg-[#3bbfa4] border-transparent hover:-translate-y-1'
+        className={`fixed bottom-8 right-8 w-16 h-16 rounded-xl flex items-center justify-center transition-all duration-500 shadow-2xl z-50 border ${
+          isOpen ? 'bg-black border-zinc-800' : 'bg-black hover:bg-[#7c3aed] border-transparent hover:-translate-y-1'
         }`}
       >
-        {isOpen ? <X className="text-[#44ddc1]" /> : <MessageSquare className="text-[#00382f]" />}
+        {isOpen ? <X className="text-white" /> : <MessageSquare className="text-white" />}
         {!isOpen && (
-          <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full border-2 border-[#0b1326] animate-pulse" />
+          <span className="absolute -top-1 -right-1 w-4 h-4 bg-[#7c3aed] rounded-full border-2 border-white animate-pulse" />
         )}
       </button>
 
@@ -70,35 +69,35 @@ export default function AIChatAssistant() {
             initial={{ scale: 0.9, opacity: 0, y: 20 }}
             animate={{ scale: 1, opacity: 1, y: 0 }}
             exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="fixed bottom-28 right-8 w-[420px] h-[600px] glass-surface rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.4)] flex flex-col overflow-hidden z-50 border border-white/5"
+            className="fixed bottom-28 right-8 w-[420px] h-[600px] bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.2)] flex flex-col overflow-hidden z-50 border border-zinc-100"
           >
             {/* Header */}
-            <div className="p-8 border-b border-white/5 bg-[#131b2e]/80 flex items-center justify-between">
+            <div className="p-8 border-b border-zinc-100 bg-white flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <div className="w-12 h-12 rounded-2xl bg-[#44ddc1] flex items-center justify-center text-[#00382f] shadow-lg shadow-[#44ddc1]/20">
+                <div className="w-12 h-12 rounded-xl bg-black flex items-center justify-center text-white shadow-lg">
                   <Bot size={24} />
                 </div>
                 <div>
-                  <p className="text-sm font-black text-[#dae2fd] leading-tight uppercase tracking-widest italic">Sentinel AI</p>
+                  <p className="text-sm font-black text-black leading-tight uppercase tracking-widest italic">Sentinel AI</p>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" />
-                    <p className="text-[9px] text-[#85948f] font-black uppercase tracking-[0.2em]">Clinical Link Active</p>
+                    <div className="w-1.5 h-1.5 rounded-full bg-[#7c3aed] animate-pulse shadow-[0_0_8px_rgba(124,58,237,0.5)]" />
+                    <p className="text-[9px] text-zinc-400 font-black uppercase tracking-[0.2em]">Clinical Link Active</p>
                   </div>
                 </div>
               </div>
-              <button onClick={() => setIsOpen(false)} className="bg-[#0b1326] p-2 rounded-xl text-[#85948f] hover:text-[#dae2fd] border border-white/5 transition-all">
+              <button onClick={() => setIsOpen(false)} className="bg-zinc-50 p-2 rounded-xl text-zinc-400 hover:text-black border border-zinc-100 transition-all">
                 <X size={20} />
               </button>
             </div>
 
             {/* Messages */}
-            <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-[#0b1326]/30 scrollbar-thin">
+            <div className="flex-1 overflow-y-auto p-8 space-y-6 bg-white scrollbar-thin">
               {messages.map((msg, i) => (
                 <div key={i} className={`flex ${msg.role === 'user' ? 'justify-end' : 'justify-start'}`}>
                   <div className={`max-w-[85%] p-5 rounded-2xl text-sm leading-relaxed border ${
                     msg.role === 'user' 
-                      ? 'bg-[#44ddc1]/10 border-[#44ddc1]/20 text-[#dae2fd] font-medium rounded-br-none shadow-xl' 
-                      : 'bg-[#171f33] border-white/5 text-[#dae2fd] rounded-bl-none shadow-2xl'
+                      ? 'bg-black border-black text-white font-medium rounded-br-none shadow-xl' 
+                      : 'bg-zinc-50 border-zinc-100 text-black rounded-bl-none shadow-sm'
                   }`}>
                     {msg.content}
                   </div>
@@ -106,8 +105,8 @@ export default function AIChatAssistant() {
               ))}
               {isLoading && (
                 <div className="flex justify-start">
-                  <div className="bg-[#171f33] text-[#85948f] p-5 rounded-2xl rounded-bl-none border border-white/5 flex items-center gap-3 shadow-2xl">
-                    <Loader2 size={16} className="animate-spin text-[#44ddc1]" />
+                  <div className="bg-zinc-50 text-zinc-400 p-5 rounded-2xl rounded-bl-none border border-zinc-100 flex items-center gap-3">
+                    <Loader2 size={16} className="animate-spin text-[#7c3aed]" />
                     <span className="text-[9px] font-black uppercase tracking-[0.3em]">Processing Neural Patterns...</span>
                   </div>
                 </div>
@@ -116,22 +115,22 @@ export default function AIChatAssistant() {
             </div>
 
             {/* Input */}
-            <form onSubmit={handleSend} className="p-6 bg-[#131b2e]/50 border-t border-white/5">
+            <form onSubmit={handleSend} className="p-6 bg-zinc-50 border-t border-zinc-100">
               <div className="relative flex items-center gap-4">
                 <div className="flex-1 relative group">
-                  <Sparkles size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#3c4a46] group-focus-within:text-[#44ddc1] transition-colors" />
+                  <Sparkles size={14} className="absolute left-4 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-[#7c3aed] transition-colors" />
                   <input 
                     type="text"
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
-                    placeholder="Authorize clinical inquiry..."
-                    className="w-full bg-[#0b1326] border border-white/5 text-[#dae2fd] pl-12 pr-6 py-4 rounded-2xl outline-none focus:border-[#44ddc1]/30 transition-all text-xs font-bold uppercase tracking-widest placeholder-[#3c4a46]"
+                    placeholder="Authorize inquiry..."
+                    className="w-full bg-white border border-zinc-200 text-black pl-12 pr-6 py-4 rounded-xl outline-none focus:border-black transition-all text-xs font-bold uppercase tracking-widest placeholder-zinc-300"
                   />
                 </div>
                 <button 
                   type="submit"
                   disabled={isLoading || !input.trim()}
-                  className="w-14 h-14 bg-[#44ddc1] text-[#00382f] rounded-2xl flex items-center justify-center hover:bg-[#3bbfa4] transition-all disabled:opacity-30 shadow-2xl shadow-[#44ddc1]/20 active:scale-95"
+                  className="w-14 h-14 bg-black text-white rounded-xl flex items-center justify-center hover:bg-[#7c3aed] transition-all disabled:opacity-30 shadow-xl active:scale-95"
                 >
                   <Send size={20} />
                 </button>

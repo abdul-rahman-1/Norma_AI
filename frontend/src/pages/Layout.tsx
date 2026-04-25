@@ -1,70 +1,57 @@
-import { Outlet, Navigate } from 'react-router-dom';
+import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
-import AIChatAssistant from '../components/AIChatAssistant';
-import { Bell, Search, HelpCircle, User, Settings as SettingsIcon } from 'lucide-react';
-import { motion } from 'framer-motion';
+import { Search, Bell, Sun, Command } from 'lucide-react';
 
 export default function Layout() {
-  const token = localStorage.getItem('token');
-  
-  if (!token) {
-    return <Navigate to="/" replace />;
-  }
-
   return (
-    <div className="flex h-screen bg-[#0b1326] text-[#dae2fd] font-premium overflow-hidden">
+    <div className="flex h-screen bg-white overflow-hidden">
       <Sidebar />
-      
-      <div className="flex-1 flex flex-col relative px-6 py-6 overflow-hidden">
-        <motion.header 
-          initial={{ y: -20, opacity: 0 }}
-          animate={{ y: 0, opacity: 1 }}
-          className="glass-surface h-24 rounded-[2.5rem] flex items-center justify-between px-10 mb-6 shadow-2xl border border-white/5"
-        >
-          <div className="flex items-center gap-5 bg-[#0b1326]/50 px-6 py-3 rounded-2xl border border-[#3c4a46]/20 shadow-inner w-[450px] group focus-within:bg-[#0b1326] transition-all">
-            <Search size={18} className="text-[#3c4a46] group-focus-within:text-[#44ddc1]" />
-            <input 
-              type="text" 
-              placeholder="Search clinical registry or schedule..." 
-              className="bg-transparent border-none outline-none text-sm w-full placeholder-[#3c4a46] text-[#dae2fd] font-medium"
-            />
-          </div>
-          
-          <div className="flex items-center gap-8">
-            <div className="flex items-center gap-3">
-              <button className="bg-[#171f33] border border-[#3c4a46]/20 w-12 h-12 rounded-xl flex items-center justify-center text-[#85948f] hover:text-[#44ddc1] transition-all relative shadow-xl">
-                <Bell size={20} />
-                <span className="absolute top-3 right-3 w-2 h-2 bg-[#44ddc1] rounded-full shadow-[0_0_8px_rgba(68,221,193,0.5)]" />
-              </button>
-              <button className="bg-[#171f33] border border-[#3c4a46]/20 w-12 h-12 rounded-xl flex items-center justify-center text-[#85948f] hover:text-[#44ddc1] transition-all shadow-xl">
-                <SettingsIcon size={20} />
-              </button>
+      <div className="flex-1 flex flex-col min-w-0">
+        {/* Sharp Header */}
+        <header className="h-28 flex items-center justify-between px-12 border-b border-zinc-100 bg-white z-10">
+          <div className="flex items-center gap-12">
+            <div className="flex items-center gap-4">
+               <div className="w-10 h-10 rounded-lg bg-black flex items-center justify-center text-white">
+                  <Command size={18} />
+               </div>
+               <div>
+                  <p className="text-[10px] font-black text-zinc-400 uppercase tracking-widest leading-none">System Mesh</p>
+                  <p className="text-sm font-black text-black uppercase tracking-tighter mt-1">NORMA CORE v3.0</p>
+               </div>
             </div>
-            
-            <div className="h-10 w-[1px] bg-[#3c4a46]/20" />
-            
-            <div className="flex items-center gap-4 group cursor-pointer">
-              <div className="text-right">
-                <p className="text-sm font-bold text-[#dae2fd] group-hover:text-[#44ddc1] transition-colors">Dr. Sarah Connor</p>
-                <p className="text-[10px] text-[#85948f] font-bold uppercase tracking-wider">Clinical Admin</p>
-              </div>
-              <div className="w-12 h-12 rounded-2xl bg-[#171f33] border border-[#44ddc1]/30 flex items-center justify-center text-[#44ddc1] shadow-2xl group-hover:scale-105 transition-all">
-                <User size={24} />
-              </div>
-            </div>
-          </div>
-        </motion.header>
 
-        <main className="flex-1 overflow-y-auto pr-2 scrollbar-thin">
+            <div className="w-[450px] bg-zinc-50 px-8 py-3.5 rounded-xl border border-zinc-200 flex items-center gap-4 focus-within:bg-white focus-within:ring-4 focus-within:ring-violet-500/5 transition-all">
+               <Search size={16} className="text-zinc-400" />
+               <input type="text" placeholder="Search registry..." className="bg-transparent border-none outline-none text-sm w-full font-bold text-black placeholder-zinc-300" />
+            </div>
+          </div>
+
+          <div className="flex items-center gap-8">
+            <div className="flex items-center gap-4">
+               <button className="w-11 h-11 rounded-xl border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-black hover:bg-zinc-50 transition-all">
+                  <Bell size={18} />
+               </button>
+               <button className="w-11 h-11 rounded-xl border border-zinc-200 flex items-center justify-center text-zinc-400 hover:text-black hover:bg-zinc-50 transition-all">
+                  <Sun size={18} />
+               </button>
+            </div>
+
+            <div className="flex items-center gap-5 pl-8 border-l border-zinc-100">
+               <div className="text-right">
+                  <p className="text-sm font-black text-black leading-none">Dr. Sarah Connor</p>
+                  <p className="text-[9px] font-black text-violet-600 uppercase tracking-widest mt-1.5">Authorized Provider</p>
+               </div>
+               <div className="w-12 h-12 rounded-xl border-2 border-black p-0.5 overflow-hidden">
+                  <img src="https://i.pravatar.cc/150?u=sarah" alt="Profile" className="w-full h-full object-cover rounded-lg" />
+               </div>
+            </div>
+          </div>
+        </header>
+
+        <main className="flex-1 overflow-y-auto px-12 py-10 scrollbar-thin bg-white">
           <Outlet />
         </main>
       </div>
-
-      <AIChatAssistant />
-
-      {/* Deep Space Decorative Elements */}
-      <div className="fixed top-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#44ddc1]/5 blur-[120px] rounded-full -z-10" />
-      <div className="fixed bottom-[-10%] left-[20%] w-[400px] h-[400px] bg-[#7c3aed]/5 blur-[100px] rounded-full -z-10" />
     </div>
   );
 }

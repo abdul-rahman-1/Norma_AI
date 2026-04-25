@@ -78,9 +78,8 @@ export default function Inbox() {
 
     try {
       const token = localStorage.getItem('token');
-      // Simulate sending via backend (which triggers Twilio)
-      await axios.post('http://localhost:5000/api/messages/webhook/whatsapp', 
-        new URLSearchParams({ From: `whatsapp:${activeThread._id}`, Body: text }),
+      await axios.post(`http://localhost:5000/api/messages/send?phone=${activeThread._id}&content=${encodeURIComponent(text)}`, 
+        {},
         { headers: { Authorization: `Bearer ${token}` } }
       );
       fetchMessages(activeThread._id);
@@ -176,8 +175,9 @@ export default function Inbox() {
                 </div>
                 <div>
                   <h2 className="text-2xl font-black text-slate-800 tracking-tight">{activeThread.patient_name}</h2>
-                  <p className="text-[10px] font-black text-emerald-500 uppercase tracking-widest mt-1.5 flex items-center gap-2">
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_8px_rgba(16,185,129,0.5)]" /> 
+                  <p className="text-[10px] font-black text-[#7c3aed] uppercase tracking-widest mt-1.5 flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#7c3aed] animate-pulse shadow-[0_0_8px_rgba(124,58,237,0.5)]" />
+ 
                     Real-time Sync Active
                   </p>
                 </div>

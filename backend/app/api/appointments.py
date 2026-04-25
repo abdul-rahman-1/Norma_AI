@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 from app.db.mongodb import get_db
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user, check_role
 from app.schemas.models import Appointment
 from typing import List
 from bson import ObjectId
@@ -9,7 +9,7 @@ from datetime import datetime
 router = APIRouter(prefix="/appointments", tags=["appointments"])
 
 @router.get("/", response_model=List[dict])
-async def get_appointments(current_user: dict = Depends(get_current_user)):
+async def get_appointments(current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))):
     db = get_db()
     pipeline = [
         {
@@ -42,7 +42,7 @@ async def get_appointments(current_user: dict = Depends(get_current_user)):
     return appointments
 
 @router.post("/")
-async def create_appointment(appointment: dict, current_user: dict = Depends(get_current_user)):
+async def create_appointment(appointment: dict, current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))):
     db = get_db()
     appointment["patient_id"] = ObjectId(appointment["patient_id"])
     if "doctor_id" in appointment:
@@ -58,7 +58,7 @@ async def create_appointment(appointment: dict, current_user: dict = Depends(get
     return {"message": "Appointment created", "id": str(result.inserted_id)}
 
 @router.patch("/{appointment_id}")
-async def update_appointment(appointment_id: str, update_data: dict, current_user: dict = Depends(get_current_user)):
+async def update_appointment(appointment_id: str, update_data: dict, current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))):
     db = get_db()
     if "scheduled_at" in update_data:
         update_data["scheduled_at"] = datetime.fromisoformat(update_data["scheduled_at"].replace('Z', ''))
@@ -77,7 +77,7 @@ async def update_appointment(appointment_id: str, update_data: dict, current_use
     return {"message": "Appointment updated"}
 
 @router.delete("/{appointment_id}")
-async def delete_appointment(appointment_id: str, current_user: dict = Depends(get_current_user)):
+async def delete_appointment(appointment_id: str, current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))):
     db = get_db()
     result = await db.appointments.delete_one({"_id": ObjectId(appointment_id)})
     if result.deleted_count == 0:

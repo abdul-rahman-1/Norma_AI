@@ -2,108 +2,67 @@
 @import "tailwindcss";
 
 :root {
-  --bg-deep: #0b1326;
-  --bg-surface: #131b2e;
-  --accent-teal: #44ddc1;
-  --accent-purple: #7c3aed;
-  --text-primary: #dae2fd;
-  --text-secondary: #85948f;
-  --border-glass: rgba(60, 74, 70, 0.1);
+  --norma-purple: #7c3aed;
+  --norma-black: #000000;
+  --norma-white: #ffffff;
+  --norma-gray: #f4f4f5;
+  --norma-border: #e4e4e7;
 }
 
 html {
   scroll-behavior: smooth;
-  font-size: 15px;
+  font-size: 14px;
 }
 
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background-color: var(--bg-deep);
-  color: var(--text-primary);
+  background-color: var(--norma-white);
+  color: var(--norma-black);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
-h1, h2, h3, h4, h5, h6, .font-display, .font-premium {
+h1, h2, h3, h4, h5, h6, .font-display {
   font-family: 'Outfit', sans-serif;
-  letter-spacing: -0.03em;
+  letter-spacing: -0.02em;
 }
 
-/* Glassmorphism Surface - "Clinical Luminary" Core */
-.glass-surface {
-  background: rgba(19, 27, 46, 0.7);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border: 1px solid var(--border-glass);
-  box-shadow: 
-    0 4px 15px -1px rgba(0, 0, 0, 0.2),
-    0 10px 30px -5px rgba(0, 0, 0, 0.3);
+/* Sharp Contrast Components */
+.card-white {
+  background: var(--norma-white);
+  border: 1px solid var(--norma-border);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
 }
 
-.clinical-border {
-  position: relative;
+.card-black {
+  background: var(--norma-black);
+  color: var(--norma-white);
+  border: 1px solid var(--norma-black);
 }
 
-.clinical-border::before {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: inherit;
-  padding: 1px;
-  background: linear-gradient(135deg, rgba(68, 221, 193, 0.3), rgba(68, 221, 193, 0.05), transparent);
-  mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
+.btn-purple {
+  @apply bg-[#7c3aed] text-white px-8 py-4 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all hover:bg-black active:scale-95;
 }
 
-/* Bento Card - Clinical Variant */
-.bento-card {
-  background: var(--bg-surface);
-  border-radius: 2rem;
-  padding: 1.75rem;
-  border: 1px solid var(--border-glass);
-  box-shadow: 0 4px 20px -1px rgba(0, 0, 0, 0.2);
-  transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+.btn-black {
+  @apply bg-black text-white px-8 py-4 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all hover:bg-[#7c3aed] active:scale-95;
 }
 
-.bento-card:hover {
-  transform: translateY(-3px);
-  border-color: rgba(68, 221, 193, 0.2);
-  box-shadow: 0 15px 35px -12px rgba(68, 221, 193, 0.1);
+/* Specific UI Elements */
+.status-pill {
+  @apply px-3 py-1 rounded-lg font-black text-[9px] uppercase tracking-widest border;
 }
 
-/* Buttons - Clinical Luminary */
-.btn-clinical {
-  @apply bg-[#44ddc1] text-[#00382f] px-8 py-4 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] transition-all shadow-[0_0_20px_rgba(68,221,193,0.2)] hover:shadow-[0_0_30px_rgba(68,221,193,0.4)] active:scale-95;
+.status-purple {
+  @apply bg-violet-50 text-violet-600 border-violet-100;
 }
 
-.input-clinical {
-  @apply bg-[#0b1326] border border-[#3c4a46]/20 text-[#dae2fd] px-5 py-3 rounded-xl outline-none focus:border-[#44ddc1]/40 transition-all font-medium text-sm;
-}
-
-/* Premium Scrollbar */
-.scrollbar-thin::-webkit-scrollbar { width: 4px; }
-.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
+/* Custom Scrollbar - Black/Purple */
+.scrollbar-thin::-webkit-scrollbar { width: 5px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: var(--norma-white); }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: rgba(68, 221, 193, 0.1);
-  border-radius: 100px;
+  background: var(--norma-black);
+  border-radius: 0;
 }
-.scrollbar-thin:hover::-webkit-scrollbar-thumb { background: rgba(68, 221, 193, 0.3); }
-
-/* Animation Utilities */
-.animate-float {
-  animation: float 5s ease-in-out infinite;
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0px); }
-}
-
-/* GSAP/Tailwind Entry */
-.fade-in-clinical {
-  @apply animate-in fade-in duration-700;
-}
+.scrollbar-thin:hover::-webkit-scrollbar-thumb { background: var(--norma-purple); }

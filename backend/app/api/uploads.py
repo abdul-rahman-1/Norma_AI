@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from app.api.auth import get_current_user
+from app.api.auth import get_current_user, check_role
 from app.tools.excel.parser import parse_excel_with_ai
 from app.db.mongodb import get_db
 from datetime import datetime
@@ -11,7 +11,7 @@ router = APIRouter(prefix="/uploads", tags=["uploads"])
 @router.post("/excel")
 async def upload_excel(
     file: UploadFile = File(...),
-    current_user: dict = Depends(get_current_user)
+    current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))
 ):
     if not file.filename.endswith(('.xlsx', '.xls')):
         raise HTTPException(status_code=400, detail="Invalid file format. Please upload an Excel file.")
