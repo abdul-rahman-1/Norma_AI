@@ -5,14 +5,20 @@ from app.db.mongodb import get_db
 from app.logger import logger
 from datetime import datetime
 import traceback
+import sys
 
 router = APIRouter()
 
+def flush_print(msg):
+    print(msg)
+    sys.stdout.flush()
+
 async def process_and_audit(phone: str, message: str):
     """Handles AI logic, replies to patient, and logs the entire exchange."""
-    print(f"\n--- NEW INBOUND MESSAGE ---")
-    print(f"SENDER: {phone}")
-    print(f"MESSAGE: {message}")
+    flush_print(f"\n--- NEW INBOUND MESSAGE ---")
+    flush_print(f"SENDER: {phone}")
+    flush_print(f"MESSAGE: {message}")
+    
     db = get_db()
     try:
         # 1. Log Inbound Message
@@ -24,15 +30,15 @@ async def process_and_audit(phone: str, message: str):
                 "timestamp": datetime.utcnow()
             })
         else:
-            print("CRITICAL: MongoDB connection is NULL in process_and_audit")
+            flush_print("CRITICAL: MongoDB connection is NULL in process_and_audit")
 
         # 2. Process with AI
-        print(f"AI_SERVICE: Calling process_message for {phone}...")
+        flush_print(f"AI_SERVICE: Calling process_message for {phone}...")
         response_text = await ai_service.process_message(phone, message)
-        print(f"AI_SERVICE: Response generated: '{response_text[:50]}...'")
+        flush_print(f"AI_SERVICE: Response generated: '{response_text[:50]}...'")
         
         # 3. Dispatch WhatsApp Reply
-        print(f"TWILIO: Dispatching message to {phone}...")
+        flush_print(f"TWILIO: Dispatching message to {phone}...")
         await whatsapp_service.send_custom_message(phone, response_text)
 
         # 4. Log Outbound Response
@@ -43,11 +49,11 @@ async def process_and_audit(phone: str, message: str):
                 "text": response_text,
                 "timestamp": datetime.utcnow()
             })
-        print(f"--- MESSAGE CYCLE COMPLETE ---\n")
+        flush_print(f"--- MESSAGE CYCLE COMPLETE ---\n")
 
     except Exception as e:
-        print(f"WH_PROCESSOR_ERROR: {str(e)}")
-        print(traceback.format_exc())
+        flush_print(f"WH_PROCESSOR_ERROR: {str(e)}")
+        flush_print(traceback.format_exc())
 
 @router.post("/webhook")
 async def whatsapp_webhook(
@@ -58,14 +64,14 @@ async def whatsapp_webhook(
     """Gateway entry point. Responds to Twilio instantly and audits in background."""
     try:
         sender_phone = From.replace('whatsapp:', '').strip()
-        print(f"GATEWAY: Received webhook from {sender_phone}")
+        flush_print(f"GATEWAY: Received webhook from {sender_phone}")
         
         # Dispatch to background audit stream
         background_tasks.add_task(process_and_audit, sender_phone, Body)
         
-        # Return 200 OK instantly to Twilio
-        return Response(content="OK", media_type="text/plain", status_code=200)
+        # Return empty response to Twilio to prevent automatic "OK" replies
+        return Response(content="", media_type="text/xml", status_code=200)
         
     except Exception as e:
-        print(f"GATEWAY_WEBHOOK_EXCEPTION: {e}")
-        return Response(content="OK", status_code=200)
+        flush_print(f"GATEWAY_WEBHOOK_EXCEPTION: {e}")
+        return Response(content="", status_code=200)
