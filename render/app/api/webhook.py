@@ -9,19 +9,15 @@ import sys
 
 router = APIRouter()
 
-def flush_print(msg):
+def print(msg):
     print(msg)
     sys.stdout.flush()
 
 async def process_and_audit(phone: str, message: str):
     """Handles AI logic, replies to patient, and logs the entire exchange."""
-    flush_print(f"\n--- NEW INBOUND MESSAGE ---")
-    flush_print(f"SENDER: {phone}")
-    flush_print(f"MESSAGE: {message}")
-    
     db = get_db()
     try:
-        # 1. Log Inbound Message
+        # 1. Log Inbound Message to DB
         if db is not None:
             await db.messages.insert_one({
                 "phone": phone,
@@ -29,19 +25,14 @@ async def process_and_audit(phone: str, message: str):
                 "text": message,
                 "timestamp": datetime.utcnow()
             })
-        else:
-            flush_print("CRITICAL: MongoDB connection is NULL in process_and_audit")
-
-        # 2. Process with AI
-        flush_print(f"AI_SERVICE: Calling process_message for {phone}...")
-        response_text = await ai_service.process_message(phone, message)
-        flush_print(f"AI_SERVICE: Response generated: '{response_text[:50]}...'")
         
-        # 3. Dispatch WhatsApp Reply
-        flush_print(f"TWILIO: Dispatching message to {phone}...")
+        # 2. Process with AI
+        response_text = await ai_service.process_message(phone, message)
+        
+        # 3. Dispatch WhatsApp Reply (Logging happens inside send_custom_message)
         await whatsapp_service.send_custom_message(phone, response_text)
 
-        # 4. Log Outbound Response
+        # 4. Log Outbound Response to DB
         if db is not None:
             await db.messages.insert_one({
                 "phone": phone,
@@ -49,11 +40,13 @@ async def process_and_audit(phone: str, message: str):
                 "text": response_text,
                 "timestamp": datetime.utcnow()
             })
-        flush_print(f"--- MESSAGE CYCLE COMPLETE ---\n")
 
     except Exception as e:
-        flush_print(f"WH_PROCESSOR_ERROR: {str(e)}")
-        flush_print(traceback.format_exc())
+        timestamp = datetime.utcnow().isoformat() + "Z"
+        print(f"\n[ERROR]")
+        print(f"TIME: {timestamp}")
+        print(f"FROM: {phone}")
+        print(f"ERROR: {traceback.format_exc()}")
 
 @router.post("/webhook")
 async def whatsapp_webhook(
@@ -66,12 +59,12 @@ async def whatsapp_webhook(
     """Gateway entry point. Responds to Twilio instantly and audits in background."""
     try:
         timestamp = datetime.utcnow().isoformat() + "Z"
-        flush_print("\n[INCOMING MESSAGE]")
-        flush_print(f"TIME: {timestamp}")
-        flush_print(f"FROM: {From}")
-        flush_print(f"TO: {To}")
-        flush_print(f"MESSAGE: \"{Body}\"")
-        flush_print(f"SID: {SmsSid}")
+        print("\n[INCOMING MESSAGE]")
+        print(f"TIME: {timestamp}")
+        print(f"FROM: {From}")
+        print(f"TO: {To}")
+        print(f"MESSAGE: \"{Body}\"")
+        print(f"SID: {SmsSid}")
         
         sender_phone = From.replace('whatsapp:', '').strip()
         
@@ -83,9 +76,9 @@ async def whatsapp_webhook(
         
     except Exception as e:
         timestamp = datetime.utcnow().isoformat() + "Z"
-        flush_print(f"\n[ERROR]")
-        flush_print(f"TIME: {timestamp}")
-        flush_print(f"FROM: {From if 'From' in locals() else 'Unknown'}")
-        flush_print(f"MESSAGE: {Body if 'Body' in locals() else 'Unknown'}")
-        flush_print(f"ERROR: {traceback.format_exc()}")
+        print(f"\n[ERROR]")
+        print(f"TIME: {timestamp}")
+        print(f"FROM: {From if 'From' in locals() else 'Unknown'}")
+        print(f"MESSAGE: {Body if 'Body' in locals() else 'Unknown'}")
+        print(f"ERROR: {traceback.format_exc()}")
         return Response(content="", status_code=200)

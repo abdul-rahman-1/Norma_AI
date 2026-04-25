@@ -14,7 +14,7 @@ from typing import Optional, List
 settings = get_settings()
 genai.configure(api_key=settings.gemini_api_key)
 
-def flush_print(msg):
+def print(msg):
     print(msg)
     sys.stdout.flush()
 
@@ -91,22 +91,23 @@ class AIService:
                 return "I'm sorry, I'm having trouble connecting to my clinical database right now. Please try again in a few moments. 🏥"
             
             normalized_phone = normalize_phone(phone_raw)
-            # Remove + for some search variants
+            # Extract last 10 digits for robust matching
             phone_digits = "".join(filter(str.isdigit, normalized_phone))
+            phone_suffix_10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
             
-            flush_print(f"AI_PROCESS: RawPhone={phone_raw} Normalized={normalized_phone}")
+            print(f"AI_PROCESS: RawPhone={phone_raw} Normalized={normalized_phone} Suffix={phone_suffix_10}")
             
-            # 1. FETCH PATIENT - Recognition fix using schema fields
+            # 1. FETCH PATIENT - Recognition fix using suffix-based regex
+            # This handles numbers stored with spaces, country codes, or different formats
             patient = await db.patients.find_one({
                 "$or": [
                     {"phone_number": normalized_phone},
-                    {"phone_number": phone_raw},
-                    {"phone_number": {"$regex": phone_digits}}
+                    {"phone_number": {"$regex": phone_suffix_10 + "$"}}
                 ]
             })
             
             status = "OLD_PATIENT" if patient else "NEW_PATIENT"
-            flush_print(f"AI_STATUS: {status} (Found={bool(patient)})")
+            print(f"AI_STATUS: {status} (Found={bool(patient)})")
             
             # 2. FETCH CONTEXT DATA
             appointments = []
@@ -158,12 +159,12 @@ class AIService:
             return final_reply
 
         except Exception as e:
-            flush_print(f"AI_CRITICAL_ERROR: {traceback.format_exc()}")
+            print(f"AI_CRITICAL_ERROR: {traceback.format_exc()}")
             return "I encountered an error while processing your request. Please try again."
 
     async def execute_action(self, name, args, sender_phone, patient):
         db = get_db()
-        flush_print(f"TOOL_EXEC: {name} with args {args}")
+        print(f"TOOL_EXEC: {name} with args {args}")
         try:
             if name == "register_new_patient":
                 # Handle Date conversion
@@ -238,10 +239,10 @@ class AIService:
             
             return {"status": "error", "message": "Unknown tool."}
         except Exception as e:
-            flush_print(f"TOOL_ERROR: {e}")
+            print(f"TOOL_ERROR: {e}")
             return {"status": "error", "message": str(e)}
         except Exception as e:
-            flush_print(f"TOOL_ERROR: {e}")
+            print(f"TOOL_ERROR: {e}")
             return f"Error executing {name}."
 
 ai_service = AIService()

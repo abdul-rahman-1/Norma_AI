@@ -6,7 +6,7 @@ import sys
 
 settings = get_settings()
 
-def flush_print(msg):
+def print(msg):
     print(msg)
     sys.stdout.flush()
 
@@ -31,11 +31,11 @@ class WhatsAppService:
             
             # Log outgoing message
             timestamp = datetime.utcnow().isoformat() + "Z"
-            flush_print("\n[OUTGOING MESSAGE]")
-            flush_print(f"TIME: {timestamp}")
-            flush_print(f"TO: {to_whatsapp}")
-            flush_print(f"FROM: {self.from_number}")
-            flush_print(f"RESPONSE: \"{safe_body}\"")
+            print("\n[OUTGOING MESSAGE]")
+            print(f"TIME: {timestamp}")
+            print(f"TO: {to_whatsapp}")
+            print(f"FROM: {self.from_number}")
+            print(f"RESPONSE: \"{safe_body}\"")
             
             message = self.client.messages.create(
                 body=safe_body, 
@@ -45,10 +45,10 @@ class WhatsAppService:
             return message.sid
         except Exception as e:
             timestamp = datetime.utcnow().isoformat() + "Z"
-            flush_print(f"\n[ERROR - OUTGOING]")
-            flush_print(f"TIME: {timestamp}")
-            flush_print(f"TO: {to_phone if 'to_phone' in locals() else 'Unknown'}")
-            flush_print(f"ERROR: {e}")
+            print(f"\n[ERROR - OUTGOING]")
+            print(f"TIME: {timestamp}")
+            print(f"TO: {to_phone if 'to_phone' in locals() else 'Unknown'}")
+            print(f"ERROR: {e}")
             return None
 
 whatsapp_service = WhatsAppService()
