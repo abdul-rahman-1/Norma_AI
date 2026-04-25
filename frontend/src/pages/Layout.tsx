@@ -46,7 +46,7 @@ export default function Layout() {
                    <Network size={18} className="animate-pulse" />
                 </div>
                 <div>
-                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.3em] leading-none mb-1">Clinic Node</p>
+                   <p className="text-[9px] font-black text-slate-400 uppercase tracking-[0.4em] leading-none mb-1">Clinic Node</p>
                    <p className="text-xs font-black text-slate-800 uppercase tracking-tighter">Alpha-01 Online</p>
                 </div>
              </div>
@@ -110,30 +110,6 @@ export default function Layout() {
         <main className="flex-1 overflow-y-auto pr-4 scrollbar-thin relative z-10 pb-32">
           <Outlet />
         </main>
-
-        {/* Ethereal Navigation Nexus */}
-        <div className="fixed bottom-10 left-1/2 -translate-x-1/2 glass-luxury ethereal-border px-10 py-5 rounded-[2.5rem] flex items-center gap-12 z-[60] shadow-[0_30px_60px_-15px_rgba(0,0,0,0.1)] group hover:py-6 transition-all duration-700">
-           <div className="flex items-center gap-3 pr-8 border-r border-slate-100">
-              <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 animate-pulse shadow-[0_0_10px_rgba(16,185,129,0.4)]" />
-              <span className="text-[10px] font-black uppercase tracking-[0.4em] text-slate-400 italic">Secure Session</span>
-           </div>
-           <div className="flex gap-10">
-              {[
-                { label: 'Diagnostics', path: '/dashboard' },
-                { label: 'Encounters', path: '/appointments' },
-                { label: 'Global Registry', path: '/patients' }
-              ].map(item => (
-                <Link 
-                  key={item.label} 
-                  to={item.path}
-                  className="text-[10px] font-black text-slate-500 uppercase tracking-[0.3em] hover:text-purple-600 transition-all relative group/item"
-                >
-                  {item.label}
-                  <div className="absolute bottom-[-10px] left-1/2 -translate-x-1/2 w-0 h-1 bg-purple-600 rounded-full group-hover/item:w-full transition-all duration-500" />
-                </Link>
-              ))}
-           </div>
-        </div>
       </div>
 
       <AIChatAssistant />

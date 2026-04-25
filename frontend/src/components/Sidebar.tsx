@@ -9,11 +9,11 @@ export default function Sidebar() {
   const menuItems = [
     { path: '/dashboard', icon: Home, label: 'Overview', roles: ['doctor', 'receptionist'] },
     { path: '/admin-dashboard', icon: Shield, label: 'Admin Panel', roles: ['admin'] },
-    { path: '/inbox', icon: MessageSquare, label: 'Inbox', roles: ['doctor', 'receptionist', 'admin'] },
+    { path: '/inbox', icon: MessageSquare, label: 'Inbox', roles: ['doctor', 'receptionist'] },
     { path: '/appointments', icon: Calendar, label: 'Schedule', roles: ['doctor', 'receptionist'] },
     { path: '/patients', icon: Users, label: 'Patients', roles: ['doctor', 'receptionist'] },
     { path: '/bulk-upload', icon: UploadCloud, label: 'Add Data', roles: ['doctor'] },
-    { path: '/settings', icon: Settings, label: 'Settings', roles: ['doctor', 'receptionist', 'admin'] },
+    { path: '/settings', icon: Settings, label: 'Settings', roles: ['doctor', 'receptionist'] },
   ];
 
   return (

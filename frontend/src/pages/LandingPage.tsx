@@ -1,28 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Activity, Shield, Zap, MessageSquare, ChevronRight, Bot, Sparkles, ArrowRight, CheckCircle2 } from 'lucide-react';
-
-const ScrambleText = ({ text }: { text: string }) => {
-  const [display, setDisplay] = useState('');
-  const chars = '!<>-_\\/[]{}—=+*^?#________';
-
-  useEffect(() => {
-    let iteration = 0;
-    const interval = setInterval(() => {
-      setDisplay(
-        text.split('').map((char, index) => {
-          if (index < iteration) return text[index];
-          return chars[Math.floor(Math.random() * chars.length)];
-        }).join('')
-      );
-      if (iteration >= text.length) clearInterval(interval);
-      iteration += 1 / 3;
-    }, 30);
-    return () => clearInterval(interval);
-  }, [text]);
-
-  return <span>{display}</span>;
-};
+import { motion } from 'framer-motion';
 
 export default function LandingPage() {
   const navigate = useNavigate();
@@ -159,26 +138,6 @@ export default function LandingPage() {
           </div>
         </div>
       </section>
-
-      {/* Footer */}
-      <footer className="py-20 px-10 border-t border-gray-100 bg-gray-50/50">
-        <div className="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-10">
-          <div className="flex items-center gap-3">
-            <div className="bg-zinc-900 text-white p-1.5 rounded-lg">
-              <Activity size={20} />
-            </div>
-            <span className="text-xl font-black tracking-tighter uppercase italic">Norma AI</span>
-          </div>
-          <p className="text-[10px] font-black text-gray-400 tracking-[0.3em] uppercase">
-            &copy; 2026 Norma AI Clinical Systems • Secure Medical Network
-          </p>
-          <div className="flex gap-8">
-            {['Privacy', 'Security', 'Uptime'].map(item => (
-              <a key={item} href="#" className="text-[10px] font-black uppercase tracking-[0.2em] text-gray-500 hover:text-purple-600 transition-all">{item}</a>
-            ))}
-          </div>
-        </div>
-      </footer>
     </div>
   );
 }
