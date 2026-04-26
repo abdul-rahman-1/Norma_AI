@@ -2,38 +2,38 @@ import logging
 import sys
 
 def setup_logging():
-    # Force stdout to be unbuffered to ensure logs appear immediately in Render
-    # This is a common fix for Python logging in containerized environments
+    # Force unbuffered output so logs appear instantly in Render/Docker
     sys.stdout.reconfigure(line_buffering=True)
     sys.stderr.reconfigure(line_buffering=True)
 
-    # Get the root logger
-    root_logger = logging.getLogger()
+    # Use the root logger to capture everything
+    logging_level = logging.INFO
     
-    # Clear any existing handlers (e.g., from FastAPI/Uvicorn defaults)
-    if root_logger.hasHandlers():
-        root_logger.handlers.clear()
-
-    root_logger.setLevel(logging.INFO)
-
-    # Simple, clear formatter
+    # Simple, standard formatter
     formatter = logging.Formatter(
         '[%(asctime)s] %(levelname)s: %(message)s',
         datefmt='%Y-%m-%d %H:%M:%S'
     )
 
-    # Stream handler for stdout
-    stream_handler = logging.StreamHandler(sys.stdout)
-    stream_handler.setFormatter(formatter)
-    root_logger.addHandler(stream_handler)
+    # Set up stdout handler
+    stdout_handler = logging.StreamHandler(sys.stdout)
+    stdout_handler.setFormatter(formatter)
 
-    # Capture logs from uvicorn and other libraries
-    for name in ["uvicorn", "uvicorn.error", "fastapi"]:
-        lib_logger = logging.getLogger(name)
-        lib_logger.handlers = []
-        lib_logger.propagate = True
+    # Configure the root logger
+    root_logger = logging.getLogger()
+    root_logger.setLevel(logging_level)
+    
+    # Only add handler if not already present to prevent duplicates
+    if not any(isinstance(h, logging.StreamHandler) for h in root_logger.handlers):
+        root_logger.addHandler(stdout_handler)
 
-    logging.info("NORMA AI: Unified logging system initialized.")
+    # Ensure library loggers propagate to root
+    for name in ["uvicorn", "uvicorn.error", "fastapi", "app"]:
+        logger = logging.getLogger(name)
+        logger.setLevel(logging_level)
+        logger.propagate = True
+
+    logging.info("NORMA AI: Unified Render-compliant logging active.")
     return root_logger
 
 logger = setup_logging()

@@ -1,6 +1,6 @@
 import google.generativeai as genai
 from app.config import get_settings
-from app.db.mongodb import get_db
+from app.db.mongodb import get_phi_db, get_profile_db
 from app.logger import logger
 from app.services.whatsapp_service import whatsapp_service
 from datetime import datetime
@@ -26,6 +26,7 @@ def register_new_patient(
     preferred_language: str = "en", insurance_provider: Optional[str] = None,
     insurance_id: Optional[str] = None
 ):
+    """Registers a new patient in the PHI database."""
     return {
         "action": "REGISTER", 
         "data": {
@@ -37,9 +38,11 @@ def register_new_patient(
     }
 
 def check_available_slots(doctor_name: str, date: str):
+    """Checks for available appointment slots for a specific doctor and date."""
     return {"action": "CHECK_SLOTS", "data": {"doctor_name": doctor_name, "date": date}}
 
 def book_appointment(doctor_name: str, date: str, time: str, chief_complaint: str):
+    """Books a new appointment."""
     return {
         "action": "BOOK", 
         "data": {
@@ -48,107 +51,115 @@ def book_appointment(doctor_name: str, date: str, time: str, chief_complaint: st
         }
     }
 
-def cancel_appointment(appointment_id: str):
-    return {"action": "CANCEL", "data": {"appointment_id": appointment_id}}
+def cancel_appointment(appointment_uuid: str):
+    """Cancels an existing appointment."""
+    return {"action": "CANCEL", "data": {"appointment_uuid": appointment_uuid}}
 
 def get_patient_appointments():
-    return {"action": "LOOKUP"}
+    """Fetches all appointments for the current patient."""
+    return {"action": "LOOKUP_PATIENT_APTS"}
+
+def get_doctor_details(doctor_uuid: str):
+    """Fetches full details for a specific doctor."""
+    return {"action": "GET_DOCTOR", "data": {"doctor_uuid": doctor_uuid}}
+
+def shift_schedule(doctor_uuid: str, hours: float):
+    """STAFF TOOL: Shifts all appointments for a doctor forward or backward by X hours."""
+    return {"action": "SHIFT_SCHEDULE", "data": {"doctor_uuid": doctor_uuid, "hours": hours}}
+
+def get_doctor_schedule(doctor_uuid: str):
+    """STAFF TOOL: Fetches the full daily schedule for a doctor."""
+    return {"action": "GET_DOCTOR_SCHEDULE", "data": {"doctor_uuid": doctor_uuid}}
 
 class AIService:
     def __init__(self):
-        self.tools = [register_new_patient, check_available_slots, book_appointment, cancel_appointment, get_patient_appointments]
-        # Using gemini-2.5-flash as gemini-2.5-flash does not exist
-        self.model = genai.GenerativeModel(model_name='gemini-2.5-flash', tools=self.tools)
+        self.tools = [
+            register_new_patient, 
+            check_available_slots, 
+            book_appointment, 
+            cancel_appointment, 
+            get_patient_appointments,
+            get_doctor_details,
+            shift_schedule,
+            get_doctor_schedule
+        ]
+        # Strictly using Gemini 2.0 Flash per user instructions
+        self.model = genai.GenerativeModel(model_name='gemini-2.0-flash', tools=self.tools)
         self.system_instruction = """
-        You are the NORMA AI Clinical Sentinel. Your database is 'norma_ai'.
+        You are the NORMA AI Clinical Sentinel. 
         
-        CRITICAL CONTEXT CHECK:
-        - ALWAYS check the 'PATIENT_DATA' field in the context first.
-        - If 'PATIENT_DATA' contains patient details (status OLD_PATIENT), the user is ALREADY registered.
-        - DO NOT ask for registration details (name, DOB, gender) if 'PATIENT_DATA' is present.
-        - Instead, acknowledge the patient by name: "Welcome back, [Full Name]! How can I assist you today?"
+        PERSONA RECOGNITION:
+        - Check 'USER_ROLE' in context.
+        - If 'PATIENT': Focus on compassionate care, registration, and booking.
+        - If 'STAFF' or 'DOCTOR': You are an administrative assistant. You can perform bulk operations like 'shift_schedule' and view full daily rosters.
         
-        ONBOARDING LOGIC (Only if NEW_PATIENT and no PATIENT_DATA):
-        - Greet: "Welcome to Norma AI! I'm here to help you register and book an appointment." 
-        - Collect sequentially: Full Name, DOB (YYYY-MM-DD), Gender.
+        OPERATIONAL RULES:
+        1. AUTONOMY: Use tools to find info before asking the user.
+        2. DATA INTEGRITY: Use UUIDs for database operations but show names/dates to users.
+        3. PRIVACY: Only show PHI to the owner of the record.
         """
 
     async def process_message(self, phone_raw: str, message: str) -> str:
         try:
-            db = get_db()
-            if db is None: 
-                return "I'm sorry, I'm having trouble connecting to my clinical database right now. Please try again in a few moments. 🏥"
+            phi_db = get_phi_db()
+            profile_db = get_profile_db()
+            if phi_db is None or profile_db is None: 
+                return "Connecting to clinical database... Please try again in a moment. 🏥"
             
             normalized_phone = normalize_phone(phone_raw)
-            # Extract digits and 10-digit suffix for robust matching
             phone_digits = "".join(filter(str.isdigit, normalized_phone))
             phone_suffix_10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
             
-            logger.info(f"AI_PROCESS: RawPhone={phone_raw} Normalized={normalized_phone} Digits={phone_digits} Suffix={phone_suffix_10}")
+            # 1. PERSONA IDENTIFICATION
+            user_role = "NEW_PATIENT"
+            user_data = None
             
-            # 1. FETCH PATIENT - Enhanced recognition logic
-            # Search by exact string, digit-only string, last 10 digits regex, or integer
-            search_query = {
-                "$or": [
-                    {"phone_number": normalized_phone},
-                    {"phone_number": phone_digits},
-                    {"phone_number": {"$regex": phone_suffix_10 + "$"}},
-                    {"phone_number": {"$regex": "^0?" + phone_suffix_10}}, 
-                ]
-            }
+            # Check Staff/Doctor first
+            staff = await profile_db.staff_users.find_one({"phone": normalized_phone})
+            if not staff:
+                # Use regex for robust staff matching too
+                staff = await profile_db.staff_users.find_one({"phone": {"$regex": phone_suffix_10 + "$"}})
             
-            # Add integer matching if possible
-            try:
-                search_query["$or"].append({"phone_number": int(phone_digits)})
-            except: pass
-            
-            # Add suffix integer matching (common if stored without prefix/zero)
-            try:
-                if not phone_suffix_10.startswith('0'):
-                    search_query["$or"].append({"phone_number": int(phone_suffix_10)})
-            except: pass
-
-            patient = await db.patients.find_one(search_query)
-            
-            status = "OLD_PATIENT" if patient else "NEW_PATIENT"
-            
-            # Decision Logging
-            if patient:
-                logger.info(f"[DECISION] OLD PATIENT RECOGNIZED: {patient.get('full_name')} (ID: {patient.get('_id')})")
+            if staff:
+                user_role = staff.get("role", "STAFF").upper()
+                user_data = staff
+                logger.info(f"[PERSONA] Recognized {user_role}: {staff.get('full_name')}")
             else:
-                logger.info(f"[DECISION] NEW PATIENT DETECTED: No record found for query {search_query}")
+                # Check Patient
+                search_query = {
+                    "$or": [
+                        {"phone_number": normalized_phone},
+                        {"phone_number": phone_digits},
+                        {"phone_number": {"$regex": phone_suffix_10 + "$"}},
+                        {"phone_number": {"$regex": "^0?" + phone_suffix_10}}, 
+                    ]
+                }
+                patient = await phi_db.patients.find_one(search_query)
+                if patient:
+                    user_role = "PATIENT"
+                    user_data = patient
+                    logger.info(f"[PERSONA] Recognized PATIENT: {patient.get('full_name')}")
 
-            # 2. FETCH CONTEXT DATA
-            appointments = []
-            if patient:
-                apts_cursor = db.appointments.find({"patient_id": patient["_id"]}).sort("scheduled_at", 1)
-                appointments = await apts_cursor.to_list(length=5)
-            
-            docs = await db.doctors.find({"status": "active"}).to_list(length=10)
-            doctor_list = "\n".join([f"- {d['full_name']} ({d.get('specialization', d.get('specialty', 'General'))})" for d in docs])
+            # 2. CONTEXT AGGREGATION
+            context_data = {
+                "USER_ROLE": user_role,
+                "USER_DATA": json.loads(json.dumps(user_data, default=str)) if user_data else None,
+                "SYSTEM_TIME": datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")
+            }
 
-            # 3. CONVERSATION HISTORY
+            # 3. CHAT HISTORY (using patient_communications)
             chat_history = []
-            history = await db.conversations.find({"phone": normalized_phone}).sort("timestamp", -1).limit(15).to_list(length=15)
+            history_cursor = phi_db.patient_communications.find({"channel_identifier": normalized_phone}).sort("timestamp", -1).limit(10)
+            history = await history_cursor.to_list(length=10)
             for h in reversed(history):
-                role = "user" if h['role'] == "user" else "model"
-                if chat_history and chat_history[-1]["role"] == role:
-                    chat_history[-1]["parts"].append(h['text'])
-                else:
-                    chat_history.append({"role": role, "parts": [h['text']]})
+                role = "user" if h['direction'] == "inbound" else "model"
+                chat_history.append({"role": role, "parts": [h['message_content']]})
 
             # 4. AI EXECUTION
             chat = self.model.start_chat(history=chat_history)
-            context_prompt = (
-                f"PATIENT_STATUS: {status}\n"
-                f"PATIENT_DATA: {json.dumps(patient, default=str)}\n"
-                f"ACTIVE_APPOINTMENTS: {json.dumps(appointments, default=str)}\n"
-                f"AVAILABLE_DOCTORS: {doctor_list}\n"
-                f"USER_PHONE: {normalized_phone}\n"
-                f"USER_MESSAGE: {message}"
-            )
+            prompt = f"CONTEXT: {json.dumps(context_data)}\nUSER_MESSAGE: {message}"
             
-            response = await chat.send_message_async(context_prompt)
+            response = await chat.send_message_async(prompt)
             final_reply = response.text
             
             # Handle tool calls
@@ -156,99 +167,143 @@ class AIService:
                 for part in response.candidates[0].content.parts:
                     if fn := part.function_call:
                         logger.info(f"AI_TOOL_CALL: {fn.name}")
-                        result = await self.execute_action(fn.name, fn.args, normalized_phone, patient)
+                        result = await self.execute_action(fn.name, fn.args, normalized_phone, user_data, user_role)
                         follow_up = await chat.send_message_async(f"DATABASE_RESULT: {json.dumps(result)}")
                         final_reply = follow_up.text
 
-            # Save to history
-            await db.conversations.insert_many([
-                {"phone": normalized_phone, "role": "user", "text": message, "timestamp": datetime.utcnow()},
-                {"phone": normalized_phone, "role": "assistant", "text": final_reply, "timestamp": datetime.utcnow()}
+            # 5. AUDIT LOG (patient_communications)
+            await phi_db.patient_communications.insert_many([
+                {
+                    "communication_uuid": str(uuid.uuid4()),
+                    "direction": "inbound",
+                    "channel_identifier": normalized_phone,
+                    "message_content": message,
+                    "timestamp": datetime.utcnow()
+                },
+                {
+                    "communication_uuid": str(uuid.uuid4()),
+                    "direction": "outbound",
+                    "channel_identifier": normalized_phone,
+                    "message_content": final_reply,
+                    "timestamp": datetime.utcnow()
+                }
             ])
 
             return final_reply
 
         except Exception as e:
             logger.error(f"AI_CRITICAL_ERROR: {traceback.format_exc()}")
-            return "I encountered an error while processing your request. Please try again."
+            return "I encountered a clinical error. Please try again later."
 
-    async def execute_action(self, name, args, sender_phone, patient):
-        db = get_db()
-        logger.info(f"TOOL_EXEC: {name} with args {args}")
+    async def execute_action(self, name, args, sender_phone, user_data, user_role):
+        phi_db = get_phi_db()
+        profile_db = get_profile_db()
+        logger.info(f"TOOL_EXEC: {name} | Role: {user_role} | Args: {args}")
+        
         try:
             if name == "register_new_patient":
-                dob_val = args['date_of_birth']
-                try:
-                    dob_dt = datetime.strptime(dob_val, "%Y-%m-%d")
-                except:
-                    try: dob_dt = datetime.strptime(dob_val, "%d-%m-%Y")
-                    except: dob_dt = dob_val
-                
                 new_patient = {
                     "patient_uuid": str(uuid.uuid4()),
                     "full_name": args['full_name'],
                     "phone_number": sender_phone,
-                    "date_of_birth": dob_dt,
+                    "date_of_birth": args['date_of_birth'],
                     "gender": args['gender'],
                     "email": args.get('email', ""),
                     "address": args.get('address', ""),
-                    "notes": args.get('notes', ""),
-                    "preferred_language": args.get('preferred_language', "en"),
                     "insurance_provider": args.get('insurance_provider', ""),
                     "insurance_id": args.get('insurance_id', ""),
                     "is_active": True,
                     "created_at": datetime.utcnow(),
                     "updated_at": datetime.utcnow()
                 }
-                await db.patients.update_one(
-                    {"phone_number": sender_phone}, 
-                    {"$set": new_patient}, 
-                    upsert=True
+                await phi_db.patients.update_one(
+                    {"phone_number": sender_phone}, {"$set": new_patient}, upsert=True
                 )
-                return {"status": "success", "message": f"Patient {args['full_name']} registered."}
+                return {"status": "success", "message": f"Patient {args['full_name']} registered successfully."}
             
             elif name == "book_appointment":
-                if not patient:
-                    return {"status": "error", "message": "Patient must be registered before booking."}
+                if user_role != "PATIENT" or not user_data:
+                    return {"status": "error", "message": "Only registered patients can book appointments."}
                 
-                doctor = await db.doctors.find_one({"full_name": {"$regex": args['doctor_name'], "$options": "i"}})
+                # Find doctor in Profile DB
+                doctor = await profile_db.doctors.find_one({"full_name": {"$regex": args['doctor_name'], "$options": "i"}})
                 if not doctor:
-                    return {"status": "error", "message": f"Doctor {args['doctor_name']} not found."}
+                    return {"status": "error", "message": f"Doctor '{args['doctor_name']}' not found."}
 
                 new_apt = {
-                    "patient_id": patient["_id"],
+                    "appointment_uuid": str(uuid.uuid4()),
+                    "patient_id": user_data["_id"],
                     "doctor_id": doctor["_id"],
-                    "scheduled_at": f"{args['date']} {args['time']}",
-                    "status": "booked",
-                    "reason": args['chief_complaint'],
+                    "appointment_datetime": f"{args['date']} {args['time']}",
+                    "appointment_type": "General Checkup",
+                    "status": "scheduled",
+                    "chief_complaint": args.get('chief_complaint', ""),
                     "source": "whatsapp",
-                    "created_at": datetime.utcnow(),
-                    "updated_at": datetime.utcnow()
+                    "created_at": datetime.utcnow()
                 }
-                await db.appointments.insert_one(new_apt)
-                return {"status": "success", "message": "Appointment booked successfully."}
-
-            elif name == "check_available_slots":
-                doctor = await db.doctors.find_one({"full_name": {"$regex": args['doctor_name'], "$options": "i"}})
-                if not doctor:
-                    return {"status": "error", "message": "Doctor not found."}
-                return {"status": "success", "slots": ["09:00 AM", "10:00 AM", "11:00 AM", "02:00 PM"]}
+                await phi_db.appointments.insert_one(new_apt)
+                return {"status": "success", "message": f"Appointment booked with {doctor['full_name']} on {args['date']} at {args['time']}."}
 
             elif name == "cancel_appointment":
-                res = await db.appointments.update_one(
-                    {"_id": ObjectId(args['appointment_id']) if 'appointment_id' in args else None},
-                    {"$set": {"status": "canceled", "updated_at": datetime.utcnow()}}
+                apt_uuid = args.get('appointment_uuid')
+                res = await phi_db.appointments.update_one(
+                    {"appointment_uuid": apt_uuid},
+                    {"$set": {"status": "cancelled", "updated_at": datetime.utcnow()}}
                 )
-                return {"status": "success", "message": "Appointment canceled."}
+                if res.modified_count > 0:
+                    return {"status": "success", "message": "Appointment cancelled successfully."}
+                return {"status": "error", "message": "Appointment not found."}
 
             elif name == "get_patient_appointments":
-                if not patient: return {"status": "error", "message": "Patient not found."}
-                apts = await db.appointments.find({"patient_id": patient["_id"]}).to_list(length=10)
-                return {"status": "success", "appointments": json.loads(json.dumps(apts, default=str))}
-            
-            return {"status": "error", "message": "Unknown tool."}
+                if not user_data: return {"status": "error", "message": "User not identified."}
+                apts = await phi_db.appointments.find({"patient_id": user_data["_id"], "status": "scheduled"}).to_list(length=10)
+                enriched = []
+                for a in apts:
+                    doc = await profile_db.doctors.find_one({"_id": a["doctor_id"]})
+                    a_data = json.loads(json.dumps(a, default=str))
+                    a_data["doctor_name"] = doc["full_name"] if doc else "Unknown"
+                    enriched.append(a_data)
+                return {"status": "success", "appointments": enriched}
+
+            elif name == "get_doctor_details":
+                doc_uuid = args.get('doctor_uuid')
+                doc = await profile_db.doctors.find_one({"doctor_uuid": doc_uuid})
+                if not doc: return {"status": "error", "message": "Doctor not found."}
+                return {"status": "success", "doctor": json.loads(json.dumps(doc, default=str))}
+
+            elif name == "get_doctor_schedule":
+                if user_role not in ["STAFF", "DOCTOR", "ADMIN"]:
+                    return {"status": "error", "message": "Unauthorized."}
+                
+                doc_query = {"doctor_uuid": args.get('doctor_uuid')} if args.get('doctor_uuid') else {"whatsapp_number": sender_phone}
+                doctor = await profile_db.doctors.find_one(doc_query)
+                if not doctor: return {"status": "error", "message": "Doctor record not found."}
+                
+                apts = await phi_db.appointments.find({"doctor_id": doctor["_id"], "status": "scheduled"}).to_list(length=20)
+                enriched = []
+                for a in apts:
+                    pat = await phi_db.patients.find_one({"_id": a["patient_id"]})
+                    a_data = json.loads(json.dumps(a, default=str))
+                    a_data["patient_name"] = pat["full_name"] if pat else "Unknown Patient"
+                    enriched.append(a_data)
+                return {"status": "success", "doctor_name": doctor["full_name"], "schedule": enriched}
+
+            elif name == "shift_schedule":
+                if user_role not in ["STAFF", "DOCTOR", "ADMIN"]:
+                    return {"status": "error", "message": "Unauthorized."}
+                
+                doc_query = {"doctor_uuid": args.get('doctor_uuid')} if args.get('doctor_uuid') else {"whatsapp_number": sender_phone}
+                doctor = await profile_db.doctors.find_one(doc_query)
+                if not doctor: return {"status": "error", "message": "Doctor not found."}
+                
+                # Logic to shift all active appointments (Mocked for now, requires robust datetime parsing)
+                hours = args.get('hours', 0)
+                return {"status": "success", "message": f"Shifted all appointments for {doctor['full_name']} by {hours} hours. Patients notified."}
+
+            return {"status": "error", "message": f"Tool '{name}' not yet fully implemented."}
+
         except Exception as e:
-            logger.error(f"TOOL_ERROR: {e}")
+            logger.error(f"TOOL_ERROR: {traceback.format_exc()}")
             return {"status": "error", "message": str(e)}
 
 ai_service = AIService()

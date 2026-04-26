@@ -4,9 +4,12 @@ from typing import Optional
 import os
 
 class Settings(BaseSettings):
-    # Make these optional with defaults to prevent startup crashes
+    # Core API Keys
     mongodb_uri: str = ""
-    mongodb_db_name: str = "norma_ai"
+    # Database Partitions
+    mongodb_phi_db: str = "clinic_default_phi"
+    mongodb_profile_db: str = "clinic_default_profile"
+    
     gemini_api_key: str = ""
     twilio_account_sid: str = ""
     twilio_auth_token: str = ""
