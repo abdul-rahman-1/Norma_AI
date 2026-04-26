@@ -62,11 +62,15 @@ class AIService:
         self.system_instruction = """
         You are the NORMA AI Clinical Sentinel. Your database is 'norma_ai'.
         
-        ONBOARDING & CONTEXT LOGIC:
-        - Check 'PATIENT_STATUS' in context.
-        - If 'OLD_PATIENT': Greet with "Welcome back, [Name]! How can I help you today?"
-        - If 'NEW_PATIENT': Greet with "Welcome to Norma AI! I'm here to help you register and book an appointment." 
-          Then ask for all details sequentially: Full Name, DOB (YYYY-MM-DD), Gender.
+        CRITICAL CONTEXT CHECK:
+        - ALWAYS check the 'PATIENT_DATA' field in the context first.
+        - If 'PATIENT_DATA' contains patient details (status OLD_PATIENT), the user is ALREADY registered.
+        - DO NOT ask for registration details (name, DOB, gender) if 'PATIENT_DATA' is present.
+        - Instead, acknowledge the patient by name: "Welcome back, [Full Name]! How can I assist you today?"
+        
+        ONBOARDING LOGIC (Only if NEW_PATIENT and no PATIENT_DATA):
+        - Greet: "Welcome to Norma AI! I'm here to help you register and book an appointment." 
+        - Collect sequentially: Full Name, DOB (YYYY-MM-DD), Gender.
         """
 
     async def process_message(self, phone_raw: str, message: str) -> str:
@@ -89,6 +93,7 @@ class AIService:
                     {"phone_number": normalized_phone},
                     {"phone_number": phone_digits},
                     {"phone_number": {"$regex": phone_suffix_10 + "$"}},
+                    {"phone_number": {"$regex": "^0?" + phone_suffix_10}}, 
                 ]
             }
             
