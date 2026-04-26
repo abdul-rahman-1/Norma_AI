@@ -83,8 +83,8 @@ class AIService:
             shift_schedule,
             get_doctor_schedule
         ]
-        # Strictly using Gemini 2.0 Flash per user instructions
-        self.model = genai.GenerativeModel(model_name='gemini-2.0-flash', tools=self.tools)
+        # Using gemini-2.5-flash for stable tool execution in the current SDK
+        self.model = genai.GenerativeModel(model_name='gemini-2.5-flash', tools=self.tools)
         self.system_instruction = """
         You are the NORMA AI Clinical Sentinel. 
         
