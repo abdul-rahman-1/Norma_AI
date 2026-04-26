@@ -23,7 +23,7 @@ app.include_router(webhook.router)
 async def automation_loop():
     while True:
         try:
-            await automation_service.run_upcoming_alerts()
+            await automation_service.run_proactive_alerts()
             now = datetime.utcnow()
             if now.hour == 8 and now.minute == 0:
                 await automation_service.send_doctor_daily_briefing()
