@@ -15,11 +15,9 @@ settings = get_settings()
 genai.configure(api_key=settings.gemini_api_key)
 
 def normalize_phone(phone: str) -> str:
-    """Standardizes phone numbers to E.164 format or at least a consistent numeric string."""
+    """Standardizes phone numbers to E.164 format by removing all non-digits and ensuring a + prefix."""
     digits = "".join(filter(str.isdigit, phone))
-    if not phone.startswith('+') and len(digits) == 10:
-        pass
-    return f"+{digits}" if not phone.startswith('+') else phone
+    return f"+{digits}"
 
 # --- CLINICAL TOOLS ---
 def register_new_patient(
@@ -59,7 +57,7 @@ def get_patient_appointments():
 class AIService:
     def __init__(self):
         self.tools = [register_new_patient, check_available_slots, book_appointment, cancel_appointment, get_patient_appointments]
-        # Strictly using gemini-2.5-flash per user instruction
+        # Using gemini-2.5-flash as gemini-2.5-flash does not exist
         self.model = genai.GenerativeModel(model_name='gemini-2.5-flash', tools=self.tools)
         self.system_instruction = """
         You are the NORMA AI Clinical Sentinel. Your database is 'norma_ai'.
@@ -78,27 +76,42 @@ class AIService:
                 return "I'm sorry, I'm having trouble connecting to my clinical database right now. Please try again in a few moments. 🏥"
             
             normalized_phone = normalize_phone(phone_raw)
-            # Extract last 10 digits for robust matching
+            # Extract digits and 10-digit suffix for robust matching
             phone_digits = "".join(filter(str.isdigit, normalized_phone))
             phone_suffix_10 = phone_digits[-10:] if len(phone_digits) >= 10 else phone_digits
             
-            logger.info(f"AI_PROCESS: RawPhone={phone_raw} Normalized={normalized_phone} Suffix={phone_suffix_10}")
+            logger.info(f"AI_PROCESS: RawPhone={phone_raw} Normalized={normalized_phone} Digits={phone_digits} Suffix={phone_suffix_10}")
             
-            # 1. FETCH PATIENT - Recognition fix using suffix-based regex
-            patient = await db.patients.find_one({
+            # 1. FETCH PATIENT - Enhanced recognition logic
+            # Search by exact string, digit-only string, last 10 digits regex, or integer
+            search_query = {
                 "$or": [
                     {"phone_number": normalized_phone},
-                    {"phone_number": {"$regex": phone_suffix_10 + "$"}}
+                    {"phone_number": phone_digits},
+                    {"phone_number": {"$regex": phone_suffix_10 + "$"}},
                 ]
-            })
+            }
+            
+            # Add integer matching if possible
+            try:
+                search_query["$or"].append({"phone_number": int(phone_digits)})
+            except: pass
+            
+            # Add suffix integer matching (common if stored without prefix/zero)
+            try:
+                if not phone_suffix_10.startswith('0'):
+                    search_query["$or"].append({"phone_number": int(phone_suffix_10)})
+            except: pass
+
+            patient = await db.patients.find_one(search_query)
             
             status = "OLD_PATIENT" if patient else "NEW_PATIENT"
             
-            # Decision Logging for User
+            # Decision Logging
             if patient:
                 logger.info(f"[DECISION] OLD PATIENT RECOGNIZED: {patient.get('full_name')} (ID: {patient.get('_id')})")
             else:
-                logger.info(f"[DECISION] NEW PATIENT DETECTED: No record found for suffix {phone_suffix_10}")
+                logger.info(f"[DECISION] NEW PATIENT DETECTED: No record found for query {search_query}")
 
             # 2. FETCH CONTEXT DATA
             appointments = []
