@@ -63,22 +63,37 @@ class AIService:
             user_role = "NEW_PATIENT"
             user_data = None
             
+            # Robust Search Patterns
+            # Matches last 10 digits, or the full digit string, or the exact normalized string
+            patterns = [
+                {"$regex": phone_suffix_10 + "$"},
+                {"$regex": phone_digits + "$"},
+                normalized_phone
+            ]
+
             # Check Staff/Doctors/Admins
-            staff = await profile_db.staff_users.find_one({"phone": {"$regex": phone_suffix_10 + "$"}})
+            staff = await profile_db.staff_users.find_one({"phone": {"$or": patterns}})
             if staff:
                 # Includes ADMIN if role is set to "ADMIN"
                 user_role = staff.get("role", "STAFF").upper()
                 user_data = staff
             else:
-                doc = await profile_db.doctors.find_one({"whatsapp_number": {"$regex": phone_suffix_10 + "$"}})
+                doc = await profile_db.doctors.find_one({"whatsapp_number": {"$or": patterns}})
                 if doc:
                     user_role = "DOCTOR"
                     user_data = doc
                 else:
-                    patient = await phi_db.patients.find_one({"phone_number": {"$regex": phone_suffix_10 + "$"}})
+                    patient = await phi_db.patients.find_one({"phone_number": {"$or": patterns}})
                     if patient:
                         user_role = "PATIENT"
                         user_data = patient
+                    else:
+                        # Final Fallback: Search for the 10-digit suffix anywhere in the string 
+                        # to handle cases with extra digits or trailing characters
+                        patient = await phi_db.patients.find_one({"phone_number": {"$regex": phone_suffix_10}})
+                        if patient:
+                            user_role = "PATIENT"
+                            user_data = patient
 
             # 2. CONVERSATION HISTORY (Memory)
             convo = await phi_db.conversations.find_one({"phone": normalized_phone})
