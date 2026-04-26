@@ -83,20 +83,31 @@ class AIService:
             shift_schedule,
             get_doctor_schedule
         ]
-        # Using gemini-2.5-flash for stable tool execution in the current SDK
-        self.model = genai.GenerativeModel(model_name='gemini-2.5-flash', tools=self.tools)
+        # Attempt to use 2.0-flash-exp (as 2.5 does not exist yet in the SDK)
+        # We will wrap this to ensure we don't crash the whole service on start
+        try:
+            self.model = genai.GenerativeModel(model_name='gemini-2.0-flash-exp', tools=self.tools)
+            logger.info("AI_SERVICE: Initialized with gemini-2.0-flash-exp")
+        except Exception as e:
+            logger.warning(f"AI_SERVICE: Failed to load 2.0-flash-exp ({e}), falling back to 1.5-flash")
+            self.model = genai.GenerativeModel(model_name='gemini-1.5-flash', tools=self.tools)
+
         self.system_instruction = """
         You are the NORMA AI Clinical Sentinel. 
         
-        PERSONA RECOGNITION:
-        - Check 'USER_ROLE' in context.
-        - If 'PATIENT': Focus on compassionate care, registration, and booking.
-        - If 'STAFF' or 'DOCTOR': You are an administrative assistant. You can perform bulk operations like 'shift_schedule' and view full daily rosters.
+        CRITICAL RECOGNITION MANDATE:
+        1. On every message, you are provided with 'USER_ROLE' and 'USER_DATA' in the context.
+        2. If 'USER_ROLE' is 'PATIENT', 'STAFF', or 'DOCTOR':
+           - You MUST greet them by their 'full_name' found in 'USER_DATA'.
+           - Example: "Welcome back, Abdul Rahman! How can I assist you today?"
+           - NEVER say "I don't have access to your personal info" if 'USER_DATA' is present.
+        3. If 'USER_ROLE' is 'NEW_PATIENT':
+           - Greet them warmly and help them register using 'register_new_patient'.
         
         OPERATIONAL RULES:
-        1. AUTONOMY: Use tools to find info before asking the user.
-        2. DATA INTEGRITY: Use UUIDs for database operations but show names/dates to users.
-        3. PRIVACY: Only show PHI to the owner of the record.
+        - Use tools autonomously to find appointments or doctor details.
+        - Do not reveal raw database IDs (ObjectIds) to the user.
+        - Maintain a professional, clinical, yet helpful tone.
         """
 
     async def process_message(self, phone_raw: str, message: str) -> str:
