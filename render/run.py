@@ -20,4 +20,3 @@ logging.basicConfig(
 )
 print("Your log message here", flush=True)
 logging.info("Service started successfully")
-logging.print("Service started successfully")
