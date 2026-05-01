@@ -9,15 +9,11 @@ import uuid
 
 router = APIRouter()
 
-async def process_and_audit(phone: str, message: str):
+async def process_and_audit(phone: str, message: str, media_url: str = None, media_type: str = None):
     """Handles AI logic, replies to patient, and logs the entire exchange."""
-    phi_db = get_phi_db()
     try:
-        # Note: Inbound logging is now partially handled inside AIService.process_message 
-        # to ensure the prompt and context are tied together.
-        
-        # 1. Process with AI
-        response_text = await ai_service.process_message(phone, message)
+        # 1. Process with AI (now handles media)
+        response_text = await ai_service.process_message(phone, message, media_url, media_type)
         
         # 2. Dispatch WhatsApp Reply
         await whatsapp_service.send_custom_message(phone, response_text)
@@ -30,30 +26,27 @@ async def whatsapp_webhook(
     background_tasks: BackgroundTasks,
     Body: str = Form(None),
     From: str = Form(None),
-    To: str = Form(None),
-    MessageSid: str = Form(None),
-    SmsSid: str = Form(None)
+    MediaUrl0: str = Form(None),
+    MediaContentType0: str = Form(None),
+    MessageSid: str = Form(None)
 ):
-    """Gateway entry point. Responds to Twilio instantly and audits in background."""
+    """Gateway entry point. Detects Text and Voice Notes."""
     try:
         timestamp = datetime.utcnow().isoformat() + "Z"
-        sid = MessageSid or SmsSid or "Unknown"
         
         logger.info("\n[INCOMING MESSAGE]")
-        logger.info(f"TIME: {timestamp}")
         logger.info(f"FROM: {From}")
-        logger.info(f"MESSAGE: \"{Body}\"")
-        logger.info(f"SID: {sid}")
+        if Body: logger.info(f"TEXT: \"{Body}\"")
+        if MediaUrl0: logger.info(f"VOICE NOTE: {MediaUrl0} ({MediaContentType0})")
         
-        if not From or not Body:
+        if not From:
             return Response(content="", status_code=200)
 
         sender_phone = From.replace('whatsapp:', '').strip()
         
-        # Dispatch to background audit stream
-        background_tasks.add_task(process_and_audit, sender_phone, Body)
+        # Dispatch to background with potential media
+        background_tasks.add_task(process_and_audit, sender_phone, Body or "", MediaUrl0, MediaContentType0)
         
-        # Return empty response to Twilio instantly
         return Response(content="", media_type="text/xml", status_code=200)
         
     except Exception as e:

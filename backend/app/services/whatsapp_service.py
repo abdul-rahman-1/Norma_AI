@@ -24,7 +24,13 @@ class WhatsAppService:
             to_whatsapp = f"whatsapp:{clean_phone}"
 
             message = self.client.messages.create(
-                body=f"✨ *NORMA AI: Clinical Registration Complete*\n\nHello {patient_name},\n\nYour clinical profile has been successfully ingested into our network.\n\n*Global ID:* {patient_uuid}\n\nOur AI Sentinel is now monitoring your healthcare journey. You can book or reschedule appointments directly through this chat.\n\n*Stay Healthy,* \nNORMA AI Team",
+                body=(
+                    f"Hello {patient_name},\n\n"
+                    f"Your profile has been successfully registered at our clinic.\n"
+                    f"Your doctor's team will be in touch with you regarding your appointments.\n\n"
+                    f"Reference ID: {patient_uuid}\n\n"
+                    f"— NORMA AI Clinic Management System"
+                ),
                 from_=self.from_number,
                 to=to_whatsapp
             )

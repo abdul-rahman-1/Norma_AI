@@ -2,7 +2,7 @@ from fastapi import FastAPI, Response
 from fastapi.responses import StreamingResponse, HTMLResponse
 from fastapi.middleware.cors import CORSMiddleware
 from app.db.mongodb import connect_to_mongo, close_mongo_connection, get_phi_db, get_profile_db
-from app.api import webhook
+from app.api import webhook, messages
 from app.logger import logger, log_buffer, log_listeners
 from app.services.automation_service import automation_service
 import asyncio
@@ -19,15 +19,20 @@ app.add_middleware(
 )
 
 app.include_router(webhook.router)
+app.include_router(messages.router)
 
 async def automation_loop():
     while True:
         try:
+            # 1. Check for 1h Doctor Prep (B22)
             await automation_service.run_proactive_alerts()
+            
             now = datetime.utcnow()
+            # 2. Trigger Daily Morning Briefing (B21) at 08:00 UTC
             if now.hour == 8 and now.minute == 0:
                 await automation_service.send_doctor_daily_briefing()
-            await asyncio.sleep(60)
+                
+            await asyncio.sleep(60) # Run every minute
         except Exception as e:
             logger.error(f"AUTOMATION_LOOP ERROR: {e}")
             await asyncio.sleep(60)

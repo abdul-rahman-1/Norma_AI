@@ -6,7 +6,6 @@ motor
 python-dotenv
 python-multipart
 twilio
-google-generative-ai
 openpyxl
 pandas
 passlib[bcrypt]

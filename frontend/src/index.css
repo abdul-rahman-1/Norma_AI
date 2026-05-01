@@ -1,68 +1,48 @@
-@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100;200;300;400;500;600;700;800;900&family=Plus+Jakarta+Sans:ital,wght@0,200;0,300;0,400;0,500;0,600;0,700;0,800;1,200&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap');
 @import "tailwindcss";
 
+@custom-variant dark (&:where(.dark, .dark *));
+
 :root {
-  --norma-purple: #7c3aed;
-  --norma-black: #000000;
-  --norma-white: #ffffff;
-  --norma-gray: #f4f4f5;
-  --norma-border: #e4e4e7;
+  --background: hsl(220 20% 98%);
+  --surface: hsl(0 0% 100%);
+  --primary: hsl(220 90% 60%);
+  --primary-foreground: hsl(0 0% 100%);
+  --muted: hsl(220 10% 90%);
+  --muted-foreground: hsl(220 10% 45%);
+  --text: hsl(220 15% 20%);
 }
 
 html {
   scroll-behavior: smooth;
-  font-size: 14px;
+  font-size: 15px;
 }
 
 body {
   margin: 0;
   font-family: 'Plus Jakarta Sans', sans-serif;
-  background-color: var(--norma-white);
-  color: var(--norma-black);
+  background-color: var(--background);
+  color: var(--text);
   -webkit-font-smoothing: antialiased;
   overflow-x: hidden;
 }
 
+/* Dark mode basic body background adjustment since index.css forces background-color */
+html.dark body {
+  background-color: #111827; /* gray-900 */
+  color: #f3f4f6; /* gray-100 */
+}
+
 h1, h2, h3, h4, h5, h6, .font-display {
-  font-family: 'Outfit', sans-serif;
-  letter-spacing: -0.02em;
+  font-family: 'Plus Jakarta Sans', sans-serif;
+  font-weight: 700;
 }
 
-/* Sharp Contrast Components */
-.card-white {
-  background: var(--norma-white);
-  border: 1px solid var(--norma-border);
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.03);
-}
-
-.card-black {
-  background: var(--norma-black);
-  color: var(--norma-white);
-  border: 1px solid var(--norma-black);
-}
-
-.btn-purple {
-  @apply bg-[#7c3aed] text-white px-8 py-4 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all hover:bg-black active:scale-95;
-}
-
-.btn-black {
-  @apply bg-black text-white px-8 py-4 rounded-xl font-black text-[11px] uppercase tracking-[0.2em] transition-all hover:bg-[#7c3aed] active:scale-95;
-}
-
-/* Specific UI Elements */
-.status-pill {
-  @apply px-3 py-1 rounded-lg font-black text-[9px] uppercase tracking-widest border;
-}
-
-.status-purple {
-  @apply bg-violet-50 text-violet-600 border-violet-100;
-}
-
-/* Custom Scrollbar - Black/Purple */
-.scrollbar-thin::-webkit-scrollbar { width: 5px; }
-.scrollbar-thin::-webkit-scrollbar-track { background: var(--norma-white); }
+/* Custom Scrollbar */
+.scrollbar-thin::-webkit-scrollbar { width: 6px; }
+.scrollbar-thin::-webkit-scrollbar-track { background: transparent; }
 .scrollbar-thin::-webkit-scrollbar-thumb {
-  background: var(--norma-black);
-  border-radius: 0;
+  background: var(--muted);
+  border-radius: 3px;
 }
-.scrollbar-thin:hover::-webkit-scrollbar-thumb { background: var(--norma-purple); }
+.scrollbar-thin:hover::-webkit-scrollbar-thumb { background: var(--muted-foreground); }

@@ -1,166 +1,149 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { Activity, Loader2 } from 'lucide-react';
 import axios from 'axios';
-import { Activity, Lock, Phone, AlertCircle, ArrowRight, ShieldCheck, Sparkles, Loader2 } from 'lucide-react';
-import { motion } from 'framer-motion';
 
-export default function Login() {
-  const navigate = useNavigate();
-  const [phone, setPhone] = useState('9876543210');
-  const [password, setPassword] = useState('norma2026');
+const Login = () => {
+  const [step, setStep] = useState(1);
+  const [name, setName] = useState('');
+  const [phone, setPhone] = useState('');
+  const [otp, setOtp] = useState('');
   const [error, setError] = useState('');
-  const [loading, setLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+  const navigate = useNavigate();
+  const { login } = useAuth();
 
-  const handleLogin = async (e: React.FormEvent) => {
+  const handleRequestOtp = async (e: React.FormEvent) => {
     e.preventDefault();
+    setIsLoading(true);
     setError('');
-    setLoading(true);
-
     try {
-      const formData = new URLSearchParams();
-      formData.append('username', phone);
-      formData.append('password', password);
-
-      const res = await axios.post('http://localhost:5000/api/auth/login', formData, {
-        headers: { 'Content-Type': 'application/x-www-form-urlencoded' }
-      });
-      
-      localStorage.setItem('token', res.data.access_token);
-      localStorage.setItem('role', res.data.role);
-      localStorage.setItem('name', res.data.name);
-      
-      if (res.data.role === 'admin') {
-        navigate('/admin-dashboard');
-      } else {
-        navigate('/dashboard');
-      }
+      await axios.post('/api/auth/request-otp', { phone_number: phone });
+      setStep(2);
     } catch (err: any) {
-      setError(err.response?.data?.detail || 'Invalid credentials');
+      console.error("OTP request failed", err);
+      setError(err.response?.data?.detail || 'Failed to send OTP. Is the phone number registered?');
     } finally {
-      setLoading(false);
+      setIsLoading(false);
     }
   };
 
+  const handleLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    setError('');
+    try {
+      const response = await axios.post('/api/auth/login', { 
+        name, 
+        phone_number: phone, 
+        otp 
+      });
+
+      const data = response.data;
+      login(data.access_token, data.role, data.name);
+      navigate(data.role === 'admin' ? '/admin-dashboard' : '/dashboard');
+
+    } catch (err: any) {
+      console.error("Login failed", err);
+      setError(err.response?.data?.detail || 'Login failed. Please check your OTP and try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const inputStyles = "w-full px-4 py-2.5 mt-1 text-sm bg-gray-100 border border-gray-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900";
+  const buttonStyles = "w-full py-3 text-sm font-semibold text-white bg-blue-600 rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:opacity-60 flex items-center justify-center gap-2";
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white relative overflow-hidden p-6 font-premium">
-      {/* Decorative Elements */}
-      <div className="absolute top-0 right-0 w-[600px] h-[600px] bg-[#7c3aed]/5 blur-[120px] rounded-full -mr-32 -mt-32 -z-10" />
-
-      <div className="w-full max-w-[1100px] grid grid-cols-1 lg:grid-cols-2 bg-white rounded-[2.5rem] shadow-[0_40px_100px_rgba(0,0,0,0.1)] border border-zinc-100 overflow-hidden min-h-[700px] relative z-10">
-        {/* Left Side: Clinical Sentinel Branding */}
-        <div className="hidden lg:flex flex-col justify-between bg-black p-16 relative overflow-hidden">
-          <div className="absolute top-0 right-0 p-10 opacity-5">
-             <Activity size={350} className="text-white" />
+    <div className="flex items-center justify-center min-h-screen bg-gray-50">
+      <div className="w-full max-w-sm p-8 space-y-6 bg-white rounded-2xl shadow-sm border border-gray-200">
+        <div className="text-center">
+          <div className="inline-flex items-center justify-center w-12 h-12 rounded-xl bg-blue-600 text-white mb-4">
+            <Activity size={24} />
           </div>
-          
-          <div className="relative z-10">
-            <div className="flex items-center gap-4 mb-16">
-              <div className="bg-[#7c3aed] text-white p-3 rounded-xl shadow-2xl">
-                <Activity size={32} />
-              </div>
-              <span className="text-2xl font-black text-white italic tracking-tighter uppercase">NORMA AI</span>
-            </div>
-            
-            <h2 className="text-7xl font-black text-white tracking-tighter leading-[0.9] uppercase mb-10 italic">
-              Clinical<br />
-              <span className="text-[#7c3aed]">Sentinel</span>
-            </h2>
-            <p className="text-zinc-500 text-xl font-medium leading-relaxed max-w-sm">
-              Global clinical mesh access enabled. Authenticate terminal ID to establish secure session.
-            </p>
-          </div>
-
-          <div className="relative z-10 flex items-center gap-6">
-            <div className="flex -space-x-3">
-              {[1,2,3,4].map(i => (
-                <div key={i} className="w-12 h-12 rounded-full border-4 border-black bg-zinc-900 overflow-hidden">
-                  <img src={`https://i.pravatar.cc/100?img=${i+20}`} alt="Staff" className="opacity-80 grayscale hover:opacity-100 transition-all" />
-                </div>
-              ))}
-            </div>
-            <p className="text-[10px] font-black text-zinc-500 uppercase tracking-[0.25em] leading-tight">
-              1,240+ Active Nodes<br /><span className="text-[#7c3aed]">Secure Multi-Sync</span>
-            </p>
-          </div>
+          <h1 className="text-2xl font-bold text-gray-800">Doctor & Staff Portal</h1>
+          <p className="text-sm text-gray-500 mt-2">Welcome to Norma AI</p>
         </div>
 
-        {/* Right Side: Authentication Terminal */}
-        <div className="p-12 md:p-24 flex flex-col justify-center relative bg-white">
-          <div className="mb-16">
-            <div className="inline-flex items-center gap-3 px-4 py-2 rounded-xl bg-zinc-50 border border-zinc-200 mb-8">
-              <ShieldCheck size={16} className="text-[#7c3aed]" />
-              <span className="text-[10px] font-black tracking-[0.3em] text-black uppercase">Authorize Session</span>
-            </div>
-            <h3 className="text-5xl font-black text-black tracking-tighter uppercase italic leading-none">Sign In</h3>
-            <p className="text-zinc-400 font-bold text-xs uppercase tracking-[0.4em] mt-4 opacity-60">Initializing protocol...</p>
-          </div>
-          
-          {error && (
-            <motion.div 
-              initial={{ x: -10, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              className="bg-red-50 border border-red-100 p-5 rounded-xl mb-10 flex items-center gap-4 text-red-500 text-sm font-bold"
-            >
-              <AlertCircle size={20} />
-              {error}
-            </motion.div>
-          )}
+        {error && <p className="text-red-500 text-xs text-center font-semibold bg-red-50 p-3 rounded-lg">{error}</p>}
 
-          <form onSubmit={handleLogin} className="space-y-10">
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] ml-2">Terminal ID</label>
-              <div className="relative group">
-                <Phone size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-[#7c3aed] transition-colors" />
-                <input 
-                  type="text" 
-                  value={phone}
-                  onChange={(e) => setPhone(e.target.value)}
-                  className="w-full bg-zinc-50 border-2 border-transparent text-black pl-16 pr-8 py-6 rounded-xl text-lg font-black tracking-tight outline-none focus:bg-white focus:border-black transition-all shadow-inner"
-                  placeholder="Enter Phone..."
-                  required
-                />
-              </div>
+        {step === 1 ? (
+          <form onSubmit={handleRequestOtp} className="space-y-4">
+            <div>
+              <label htmlFor="name" className="block text-xs font-semibold text-gray-600">Full Name</label>
+              <input
+                id="name"
+                type="text"
+                required
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                className={inputStyles}
+                placeholder="Your registered full name"
+              />
             </div>
-            
-            <div className="space-y-4">
-              <label className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.3em] ml-2">Access Key</label>
-              <div className="relative group">
-                <Lock size={20} className="absolute left-6 top-1/2 -translate-y-1/2 text-zinc-300 group-focus-within:text-[#7c3aed] transition-colors" />
-                <input 
-                  type="password" 
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  className="w-full bg-zinc-50 border-2 border-transparent text-black pl-16 pr-8 py-6 rounded-xl text-lg font-black tracking-tight outline-none focus:bg-white focus:border-black transition-all shadow-inner"
-                  placeholder="••••••••"
-                  required
-                />
-              </div>
+            <div>
+              <label htmlFor="phone" className="block text-xs font-semibold text-gray-600">Phone Number</label>
+              <input
+                id="phone"
+                type="tel"
+                required
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                className={inputStyles}
+                placeholder="e.g., +15551234567"
+              />
             </div>
-            
-            <button 
-              type="submit" 
-              disabled={loading}
-              className="w-full bg-black text-white py-8 rounded-xl font-black uppercase tracking-[0.4em] text-xs hover:bg-[#7c3aed] transition-all active:scale-95 shadow-2xl shadow-zinc-900/10 mt-6"
+            <button
+              type="submit"
+              disabled={isLoading || !name || !phone}
+              className={buttonStyles}
             >
-              {loading ? (
-                <Loader2 className="animate-spin mx-auto" size={24} />
-              ) : (
-                <div className="flex items-center justify-center gap-4">
-                  <span>Establish Link</span>
-                  <ArrowRight size={20} className="text-[#7c3aed]" />
-                </div>
-              )}
+              {isLoading ? <Loader2 className="animate-spin" size={20} /> : 'Continue'}
             </button>
           </form>
-
-          <div className="mt-20 text-center">
-            <div className="flex items-center justify-center gap-5 opacity-20 grayscale hover:opacity-100 hover:grayscale-0 transition-all duration-1000">
-              <Sparkles size={18} className="text-[#7c3aed]" />
-              <p className="text-[10px] text-zinc-500 font-black uppercase tracking-[0.5em]">Multi-Node Secure Sync</p>
+        ) : (
+          <form onSubmit={handleLogin} className="space-y-4">
+            <p className="text-sm text-center text-gray-600">
+              We've sent a one-time password to <br />
+              <span className="font-semibold">{phone}</span>.
+            </p>
+            <div>
+              <label htmlFor="otp" className="block text-xs font-semibold text-gray-600">Verification Code</label>
+              <input
+                id="otp"
+                type="text"
+                required
+                value={otp}
+                onChange={(e) => setOtp(e.target.value)}
+                className={inputStyles + ' text-center tracking-widest'}
+                placeholder="••••••"
+              />
             </div>
+            <button
+              type="submit"
+              disabled={isLoading || otp.length < 6}
+              className={buttonStyles}
+            >
+              {isLoading ? <Loader2 className="animate-spin" size={20} /> : 'Login Securely'}
+            </button>
+            <button
+              type="button"
+              onClick={() => { setStep(1); setError(''); }}
+              className="w-full text-xs text-center font-semibold text-gray-500 hover:text-blue-600"
+            >
+              Use a different phone number
+            </button>
+          </form>
+        )}
+         <div className="text-center pt-4 border-t border-gray-100">
+            <a href="/admin-login" className="text-xs font-semibold text-gray-500 hover:text-blue-600">
+              Switch to Administrator Login
+            </a>
           </div>
-        </div>
       </div>
     </div>
   );
-}
+};
+
+export default Login;

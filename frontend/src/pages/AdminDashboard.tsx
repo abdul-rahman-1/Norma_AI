@@ -1,136 +1,186 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
+import { useAuth } from '../contexts/AuthContext';
+import { Loader2, Search, Shield, Globe, Database, Cpu, Users, Calendar, Activity, Stethoscope, Clock, AlertCircle } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import axios from 'axios';
-import { motion, AnimatePresence } from 'framer-motion';
-import { 
-  Shield, Globe, Database, Cpu, Lock, 
-  RefreshCw, Terminal, Activity, MoreVertical,
-  CheckCircle2, Sparkles, Send, Loader2, Command, Search, Bell, Sun
-} from 'lucide-react';
 import { cn } from '../utils/cn';
+
+interface StatCardProps {
+  icon: React.ElementType;
+  title: string;
+  value: string | number;
+  color: string;
+}
+
+const AdminStatCard: React.FC<StatCardProps> = ({ icon: Icon, title, value, color }) => (
+  <div className="bg-white dark:bg-gray-800 p-8 rounded-[2.5rem] border-2 border-zinc-50 dark:border-gray-700 flex-1 shadow-sm hover:border-blue-500 transition-all group">
+    <div className={cn("flex items-center justify-center w-14 h-14 rounded-2xl mb-6 group-hover:scale-110 transition-transform", color)}>
+      <Icon size={28} />
+    </div>
+    <p className="text-4xl font-black text-black dark:text-white tracking-tighter italic">{value}</p>
+    <p className="text-[10px] font-black text-zinc-400 dark:text-zinc-500 uppercase tracking-[0.3em] mt-2">{title}</p>
+  </div>
+);
 
 export default function AdminDashboard() {
   const [stats, setStats] = useState<any>(null);
+  const [doctors, setDoctors] = useState<any[]>([]);
+  const [notifications, setNotifications] = useState<any[]>([]);
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const [toast, setToast] = useState<string | null>(null);
+  const { token, userName } = useAuth();
 
-  const showToast = (message: string) => {
-    setToast(message);
-    setTimeout(() => setToast(null), 3000);
-  };
+  const fetchAdminData = useCallback(async () => {
+    if (!token) return;
+    try {
+      const [statsRes, doctorsRes, notifyRes, auditRes] = await Promise.all([
+        axios.get('/api/dashboard/stats', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get('/api/doctors', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get('/api/dashboard/notifications', { headers: { Authorization: `Bearer ${token}` } }),
+        axios.get('/api/dashboard/audit-logs', { headers: { Authorization: `Bearer ${token}` } })
+      ]);
+      setStats(statsRes.data);
+      setDoctors(doctorsRes.data);
+      setNotifications(notifyRes.data);
+      setAuditLogs(auditRes.data);
+    } catch (err) {
+      console.error('Admin data sync failed', err);
+    } finally {
+      setLoading(false);
+    }
+  }, [token]);
 
   useEffect(() => {
-    const fetchAdminStats = async () => {
-      try {
-        const token = localStorage.getItem('token');
-        const res = await axios.get('http://localhost:5000/api/dashboard/stats', {
-          headers: { Authorization: `Bearer ${token}` }
-        });
-        setStats(res.data);
-      } catch (err) {
-        console.error('Admin telemetry sync failed', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    fetchAdminStats();
-  }, []);
-
-  const systemMetrics = [
-    { label: 'CLOUD LATENCY', value: '14ms', status: 'OPTIMAL', icon: Globe, color: 'text-black' },
-    { label: 'DATABASE HEALTH', value: '99.9%', status: 'SYNCED', icon: Database, color: 'text-[#7c3aed]' },
-    { label: 'NEURAL ENGINE', value: 'Active', status: 'PROTOCOL 2.5', icon: Cpu, color: 'text-black' },
-    { label: 'SECURITY MESH', value: 'Encrypted', status: 'AES-256', icon: Shield, color: 'text-[#7c3aed]' },
-  ];
-
+    fetchAdminData();
+  }, [fetchAdminData]);
+  
   if (loading) {
     return (
-      <div className="h-full flex items-center justify-center bg-white">
-        <Loader2 className="animate-spin text-black" size={32} />
+      <div className="h-full flex items-center justify-center bg-white dark:bg-gray-900">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="animate-spin text-blue-600" size={40} />
+          <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">Loading Core Protocol...</p>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="max-w-[1500px] mx-auto space-y-20 animate-in fade-in duration-700 relative pt-4">
-      
-      <AnimatePresence>
-        {toast && (
-          <motion.div 
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -20 }}
-            className="fixed top-8 left-1/2 -translate-x-1/2 z-50 bg-black text-white px-8 py-3.5 rounded-xl flex items-center gap-3 shadow-2xl font-black uppercase tracking-widest text-[10px]"
-          >
-            <Activity size={16} className="text-[#7c3aed]" />
-            {toast}
-          </motion.div>
-        )}
-      </AnimatePresence>
-
-      {/* Admin Header - Exact Image Match */}
-      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-8">
-        <div className="space-y-4">
-          <div className="flex items-center gap-3">
-             <div className="w-2.5 h-2.5 rounded-full bg-[#7c3aed] shadow-[0_0_8px_rgba(124,58,237,0.5)]" />
-             <span className="text-[11px] font-black text-zinc-400 uppercase tracking-[0.4em]">SYSTEM ADMINISTRATOR PRIVILEGES ACTIVE</span>
-          </div>
-          <h1 className="text-8xl font-black text-black tracking-tighter uppercase italic leading-[0.85]">SYSTEM CONTROL</h1>
-          <p className="text-zinc-500 font-bold text-xl italic">Master orchestration of the clinical network and neural nodes.</p>
+    <div className="max-w-[1400px] mx-auto space-y-12 animate-in fade-in duration-700 pb-20">
+      <header className="flex flex-col lg:flex-row justify-between items-start lg:items-end gap-6">
+        <div>
+          <h1 className="text-4xl font-black text-black dark:text-white tracking-tight uppercase italic">Command Center</h1>
+          <p className="text-zinc-500 mt-2 font-bold text-lg">System-wide clinical orchestration and security oversight.</p>
         </div>
-        
-        <div className="flex items-center gap-10">
-           <button onClick={() => showToast('Protocol: Node Reset Initialized')} className="flex items-center gap-4 text-[11px] font-black text-zinc-400 uppercase tracking-[0.4em] hover:text-[#7c3aed] transition-all group">
-              <RefreshCw size={20} className="text-[#7c3aed] group-hover:rotate-180 transition-transform duration-700" />
-              REBOOT NODES
-           </button>
-           <button className="bg-[#0b1326] text-white px-14 py-7 rounded-[1.8rem] text-[12px] font-black uppercase tracking-[0.4em] shadow-2xl hover:bg-[#7c3aed] transition-all active:scale-95 flex items-center gap-6">
-              <Send size={20} className="text-[#7c3aed]" />
-              OPEN CONSOLE
-           </button>
+        <div className="flex gap-4">
+          <Link to="/doctors" className="group bg-black dark:bg-blue-600 text-white px-10 py-5 rounded-xl text-xs font-black uppercase tracking-[0.2em] shadow-2xl hover:bg-blue-700 transition-all flex items-center gap-4 active:scale-95">
+            <Stethoscope size={18} className="group-hover:rotate-12 transition-transform" />
+            Registry
+          </Link>
         </div>
       </header>
 
-      {/* SOTA Metrics Row - Exact Image Style */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-12">
-        {systemMetrics.map((m, i) => (
-          <div 
-            key={i}
-            className="bg-white p-14 aspect-square flex flex-col justify-between relative overflow-hidden group rounded-[3.5rem] border-2 border-zinc-50 shadow-sm hover:border-[#7c3aed]/20 transition-all"
-          >
-            <div className="flex justify-between items-start">
-              <div className="w-20 h-20 rounded-[2rem] bg-zinc-50 flex items-center justify-center transition-all group-hover:bg-black group-hover:text-white group-hover:shadow-xl">
-                 <m.icon size={36} className={m.color} />
-              </div>
-              <span className="px-5 py-2 bg-zinc-50 text-zinc-400 text-[10px] font-black uppercase tracking-widest border border-zinc-100 rounded-xl group-hover:text-[#7c3aed] group-hover:bg-[#7c3aed]/5 transition-all">
-                {m.status}
-              </span>
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-8">
+        <AdminStatCard icon={Stethoscope} title="Active Providers" value={stats?.total_doctors || 0} color="bg-blue-50 text-blue-600 dark:bg-blue-900/20" />
+        <AdminStatCard icon={Users} title="Clinical Identities" value={stats?.total_patients || 0} color="bg-purple-50 text-purple-600 dark:bg-purple-900/20" />
+        <AdminStatCard icon={Calendar} title="Today's Nodes" value={stats?.today_appointments || 0} color="bg-orange-50 text-orange-600 dark:bg-orange-900/20" />
+        <AdminStatCard icon={Activity} title="AI Throughput" value={stats?.ai_interactions || 0} color="bg-green-50 text-green-600 dark:bg-green-900/20" />
+      </div>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+        <div className="lg:col-span-2 space-y-10">
+          {/* Provider Registry Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] border-2 border-zinc-50 dark:border-gray-700 overflow-hidden shadow-sm">
+            <div className="p-10 border-b border-zinc-50 dark:border-gray-700 flex justify-between items-center bg-zinc-50/30 dark:bg-gray-900/20">
+              <h2 className="text-2xl font-black text-black dark:text-white uppercase italic tracking-tighter">Core Registry</h2>
+              <Link to="/search" className="text-[10px] font-black text-blue-600 uppercase tracking-widest hover:underline flex items-center gap-2">
+                <Search size={14} /> Global Inquiry
+              </Link>
             </div>
-            
-            <div className="space-y-4">
-              <p className="text-[13px] font-black text-zinc-400 uppercase tracking-[0.4em] leading-none">{m.label}</p>
-              <p className="text-7xl font-black text-black tracking-tighter leading-none">{m.value}</p>
+            <div className="p-4 space-y-4">
+              {doctors.slice(0, 5).map((doctor: any) => (
+                <div key={doctor._id} className="flex items-center justify-between p-6 hover:bg-zinc-50/50 dark:hover:bg-gray-900/30 rounded-2xl transition-colors group">
+                  <div className="flex items-center gap-6">
+                    <div className="w-12 h-12 rounded-xl bg-black dark:bg-blue-600 text-white font-black text-xs flex items-center justify-center group-hover:scale-110 transition-transform">
+                      {doctor.full_name?.split(' ').map((n: string) => n[0]).join('')}
+                    </div>
+                    <div>
+                      <p className="text-lg font-black text-black dark:text-white leading-tight">{doctor.full_name}</p>
+                      <p className="text-[10px] font-black text-zinc-400 uppercase tracking-[0.2em] mt-1">{doctor.specialty}</p>
+                    </div>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-sm font-bold text-black dark:text-gray-300">{doctor.whatsapp_number}</p>
+                    <p className="text-[9px] font-black text-blue-600 dark:text-blue-400 uppercase tracking-widest mt-1">Provider Node: Active</p>
+                  </div>
+                </div>
+              ))}
+              {doctors.length === 0 && (
+                <div className="py-20 text-center text-zinc-300 font-bold italic">No provider nodes registered.</div>
+              )}
             </div>
           </div>
-        ))}
-      </section>
 
-      {/* Floating Chat Icon - Exact Image Match */}
-      <div className="fixed bottom-12 right-12 z-[100]">
-         <div className="relative group">
-            <button className="w-20 h-20 rounded-[1.8rem] bg-[#7c3aed] text-white flex items-center justify-center shadow-2xl shadow-violet-500/40 hover:scale-110 transition-all active:scale-95">
-               <MessageSquare size={32} />
-            </button>
-            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full border-4 border-white animate-pulse" />
-         </div>
+          {/* System Audit Log Section */}
+          <div className="bg-white dark:bg-gray-800 rounded-[2.5rem] border-2 border-zinc-50 dark:border-gray-700 overflow-hidden shadow-sm">
+            <div className="p-10 border-b border-zinc-50 dark:border-gray-700 bg-zinc-50/30 dark:bg-gray-900/20">
+              <h2 className="text-2xl font-black text-black dark:text-white uppercase italic tracking-tighter">System Audit Log</h2>
+            </div>
+            <div className="p-6 space-y-4">
+              {notifications.map((n: any) => (
+                <div key={n.id} className="flex gap-6 p-6 rounded-2xl hover:bg-zinc-50/50 dark:hover:bg-gray-900/30 transition-colors">
+                  <div className={cn(
+                    "w-10 h-10 rounded-xl flex items-center justify-center shrink-0",
+                    n.type === 'error' ? "bg-red-50 text-red-600" : 
+                    n.type === 'success' ? "bg-green-50 text-green-600" : "bg-blue-50 text-blue-600"
+                  )}>
+                    {n.type === 'error' ? <AlertCircle size={20} /> : <Activity size={20} />}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex justify-between items-start">
+                      <h3 className="text-sm font-black text-black dark:text-white uppercase tracking-tight">{n.title}</h3>
+                      <span className="text-[9px] font-black text-zinc-400 uppercase">{n.time}</span>
+                    </div>
+                    <p className="text-xs text-zinc-500 dark:text-gray-400 mt-2 font-medium leading-relaxed italic">"{n.message}"</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-10">
+          <div className="bg-black dark:bg-blue-700 text-white p-10 rounded-[3rem] relative overflow-hidden group border border-transparent dark:border-gray-700 shadow-2xl">
+            <h2 className="text-3xl font-black tracking-tighter uppercase italic mb-8 relative z-10">Mesh Health</h2>
+            <div className="space-y-6 relative z-10">
+              {[
+                { label: 'Cloud Gateway', value: 'Optimal', icon: Globe },
+                { label: 'Database Mesh', value: 'Synchronized', icon: Database },
+                { label: 'AI Cognitive Core', value: 'Active', icon: Cpu },
+                { label: 'Encryption Layer', value: 'Encrypted', icon: Shield },
+              ].map(metric => (
+                <div key={metric.label} className="flex items-center justify-between p-4 bg-white/5 rounded-xl border border-white/5 hover:bg-white/10 transition-colors">
+                  <div className="flex items-center gap-4">
+                    <metric.icon className="text-blue-400" size={18} />
+                    <p className="text-[10px] font-black uppercase tracking-widest text-zinc-400">{metric.label}</p>
+                  </div>
+                  <p className="text-[10px] font-black text-blue-400 uppercase italic">{metric.value}</p>
+                </div>
+              ))}
+            </div>
+            
+            <div className="mt-12 p-6 bg-white/5 rounded-2xl border border-white/5">
+              <div className="flex gap-4">
+                <Shield className="text-blue-400 shrink-0" size={24} />
+                <div>
+                  <p className="text-[10px] font-black uppercase tracking-[0.2em] text-white">Security Protocol 2.5</p>
+                  <p className="text-[10px] text-zinc-500 mt-2 font-bold leading-relaxed italic">Quantum-ready encryption layer active. System integrity verified.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  );
-}
-
-function MessageSquare({ size }: { size: number }) {
-  return (
-    <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round">
-      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-    </svg>
   );
 }

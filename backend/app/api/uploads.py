@@ -1,8 +1,9 @@
 from fastapi import APIRouter, Depends, HTTPException, UploadFile, File
-from app.api.auth import get_current_user, check_role
+from app.core.security import require_role
 from app.tools.excel.parser import parse_excel_with_ai
 from app.db.mongodb import get_db
 from datetime import datetime
+from bson import ObjectId
 import os
 import shutil
 
@@ -11,7 +12,8 @@ router = APIRouter(prefix="/uploads", tags=["uploads"])
 @router.post("/excel")
 async def upload_excel(
     file: UploadFile = File(...),
-    current_user: dict = Depends(check_role(["admin", "doctor", "receptionist"]))
+    db=Depends(get_db),
+    current_user: dict = Depends(require_role("admin", "doctor", "receptionist"))
 ):
     if not file.filename.endswith(('.xlsx', '.xls')):
         raise HTTPException(status_code=400, detail="Invalid file format. Please upload an Excel file.")
@@ -27,11 +29,21 @@ async def upload_excel(
     try:
         # Parse with AI
         result = await parse_excel_with_ai(file_path)
-        
-        db = get_db()
+
         inserted_count = 0
         skipped_count = 0
-        
+
+        # Determine doctor_id to assign to imported patients based on uploader's role
+        user_role = current_user.get("role", "").lower()
+        if user_role == "doctor":
+            upload_doctor_id = ObjectId(current_user["_id"]) if current_user.get("_id") else None
+        elif user_role in ["staff", "receptionist"]:
+            upload_doctor_id = ObjectId(current_user["assigned_doctor_id"]) if current_user.get("assigned_doctor_id") else None
+        else:  # admin
+            upload_doctor_id = None  # Admin uploads are unassigned unless a doctor is specified
+
+        uploader_id = ObjectId(current_user["_id"]) if current_user.get("_id") else None
+
         # Bulk insert/update patients
         for record in result["data"]:
             # Map phone to phone_number
@@ -57,7 +69,8 @@ async def upload_excel(
                 "preferred_language": "ar",
                 "total_visits": 0,
                 "is_active": True,
-                "created_by": current_user["_id"],
+                "doctor_id": upload_doctor_id,
+                "created_by": uploader_id,
                 "created_at": datetime.utcnow(),
                 "updated_at": datetime.utcnow()
             }

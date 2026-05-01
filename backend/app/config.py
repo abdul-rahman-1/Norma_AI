@@ -13,6 +13,7 @@ class Settings(BaseSettings):
     twilio_phone_number: str
     twilio_whatsapp_enabled: bool = True
     port: int = 5000
+    render_service_url: str = "http://localhost:10000"
 
     model_config = SettingsConfigDict(env_file=os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), ".env"), extra="ignore")
 
